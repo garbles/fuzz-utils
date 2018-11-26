@@ -26,9 +26,9 @@
     ts-jest "^23.10.3"
     typescript "^3.1.1"
 
-"@garbles/random@^8.0.4":
-  version "8.0.4"
-  resolved "https://registry.yarnpkg.com/@garbles/random/-/random-8.0.4.tgz#9066fefb6d6ad2c3f7c2b855d70a1d26b38697a3"
+"@garbles/random@^8.0.5":
+  version "8.0.5"
+  resolved "https://registry.yarnpkg.com/@garbles/random/-/random-8.0.5.tgz#1da81b30ad3fb2af434ed72c0d04b578023baacf"
 
 "@garbles/shrink@^0.4.0":
   version "0.4.0"

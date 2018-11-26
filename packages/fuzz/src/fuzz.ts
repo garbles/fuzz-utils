@@ -11,6 +11,100 @@ const isObject = (obj: any): obj is object =>
   Object.prototype.toString.call(obj) === "[object Object]";
 const isFilter = (obj: any): obj is Filter => isObject(obj) && "__FILTER__" in obj;
 
+const biasedRandomNumber = (
+  isPositive: boolean,
+  isNegative: boolean,
+  isInteger: boolean
+): Random<number> => {
+  const posNumber = isInteger ? rand.posInteger : rand.posFloat;
+  const negNumber = isInteger ? rand.negInteger : rand.negFloat;
+  const number = isInteger ? rand.integer : rand.float;
+
+  return new Random((size, seed) => {
+    const gens: [number, Random<number>][] = [[2, rand.return(0)]];
+
+    if (isPositive) {
+      gens.push([1, rand.return(size)]);
+    }
+
+    if (isNegative) {
+      gens.push([1, rand.return(-size)]);
+    }
+
+    if (isPositive && !isNegative && size > 0) {
+      gens.push([6, posNumber().noEmpty()]);
+    }
+
+    if (isNegative && !isPositive && size > 0) {
+      gens.push([6, negNumber().noEmpty()]);
+    }
+
+    if (isPositive && isNegative && size > 0) {
+      gens.push([6, number().noEmpty()]);
+    }
+
+    if (isPositive && size > 50) {
+      gens.push([
+        3,
+        posNumber()
+          .noEmpty()
+          .resize(50)
+      ]);
+    }
+
+    if (isNegative && size > 50) {
+      gens.push([
+        3,
+        negNumber()
+          .noEmpty()
+          .resize(50)
+      ]);
+    }
+
+    return rand.frequency(gens).generator(size, seed);
+  });
+};
+
+const biasedRandomString = (): Random<string> =>
+  new Random((size, seed) => {
+    const gens: [number, Random<string>][] = [[1, rand.return("")]];
+
+    if (size > 0) {
+      gens.push([1, rand.whitespace()]);
+
+      if (size <= 10) {
+        gens.push([8, rand.string().noEmpty()]);
+      } else if (size <= 50) {
+        gens.push([
+          5,
+          rand
+            .string()
+            .resize(10)
+            .noEmpty()
+        ]);
+        gens.push([3, rand.string().filter(s => s.length > 10)]);
+      } else {
+        gens.push([
+          5,
+          rand
+            .string()
+            .resize(10)
+            .noEmpty()
+        ]);
+        gens.push([
+          2,
+          rand
+            .string()
+            .resize(50)
+            .filter(s => s.length > 10)
+        ]);
+        gens.push([1, rand.string().filter(s => s.length > 50)]);
+      }
+    }
+
+    return rand.frequency(gens).generator(size, seed);
+  });
+
 export class RoseTree<T, U> {
   constructor(
     private pair: [T, U],
@@ -317,25 +411,29 @@ class Api {
    * Creates an integer fuzzer.
    */
   integer(): Fuzz<number, number> {
-    return Fuzz.from(rand.integer(), sh.integer());
+    const random = biasedRandomNumber(true, true, true);
+    return Fuzz.from(random, sh.integer());
   }
 
   /**
    * Creates positive integer fuzzer.
    */
   posInteger(): Fuzz<number, number> {
-    return Fuzz.from(rand.posInteger(), sh.integer());
+    const random = biasedRandomNumber(true, false, true);
+    return Fuzz.from(random, sh.integer());
   }
 
   /**
    * Creates negative integer fuzzer.
    */
   negInteger(): Fuzz<number, number> {
-    return Fuzz.from(rand.negInteger(), sh.integer());
+    const random = biasedRandomNumber(false, true, true);
+    return Fuzz.from(random, sh.integer());
   }
 
   /**
-   * Creates a fuzzer that returns an integer with some bounds.
+   * Creates a fuzzer that returns an integer with some bounds. Does not bias
+   * the distribution of values.
    * @param minSize The minimum value
    * @param maxSize The maximum value
    */
@@ -354,25 +452,29 @@ class Api {
    * Creates a float fuzzer.
    */
   float(): Fuzz<number, number> {
-    return Fuzz.from(rand.float(), sh.float());
+    const random = biasedRandomNumber(true, true, false);
+    return Fuzz.from(random, sh.float());
   }
 
   /**
    * Creates a positive float fuzzer.
    */
   posFloat(): Fuzz<number, number> {
-    return Fuzz.from(rand.posFloat(), sh.float());
+    const random = biasedRandomNumber(true, false, false);
+    return Fuzz.from(random, sh.float());
   }
 
   /**
    * Creates a negative float fuzzer.
    */
   negFloat(): Fuzz<number, number> {
-    return Fuzz.from(rand.negFloat(), sh.float());
+    const random = biasedRandomNumber(false, true, false);
+    return Fuzz.from(random, sh.float());
   }
 
   /**
-   * Creates a fuzzer that returns an float with some bounds.
+   * Creates a fuzzer that returns an float with some bounds. Does not bias
+   * the distribution of values.
    * @param minSize The minimum value
    * @param maxSize The maximum value
    */
@@ -412,7 +514,7 @@ class Api {
    * Creates a string fuzzer of ASCII characters.
    */
   string(): Fuzz<string, string> {
-    return Fuzz.from(rand.string(), sh.string());
+    return Fuzz.from(biasedRandomString(), sh.string());
   }
 
   /**
@@ -434,12 +536,15 @@ class Api {
    * @param fuzz The members of a fuzzer.
    */
   array<T, U>(fuzz: Fuzz<T, U>): Fuzz<T[], U[]> {
+    const biasedSize = biasedRandomNumber(true, false, true);
+
     return new Fuzz((size, seed) => {
-      const [random, shrink, seed2, filterMap] = fuzz.generator(size, seed);
+      const [maxLength, seed2] = biasedSize.generator(size, seed);
+      const [random, shrink, seed3, filterMap] = fuzz.generator(maxLength, seed2);
       const nextRandom = rand.array(random);
       const nextShrink = sh.array(shrink);
 
-      return [nextRandom, nextShrink, seed2, filterMap.toArray()];
+      return [nextRandom, nextShrink, seed3, filterMap.toArray()];
     });
   }
 

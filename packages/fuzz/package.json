@@ -13,7 +13,7 @@
     "prepublish": "project prepublish"
   },
   "dependencies": {
-    "@garbles/random": "^8.0.4",
+    "@garbles/random": "^8.0.5",
     "@garbles/shrink": "^0.4.0"
   },
   "devDependencies": {
