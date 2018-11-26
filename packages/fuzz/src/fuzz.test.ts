@@ -569,3 +569,31 @@ test("creates a growing rose tree of values where the first is always the empty 
   expect(value).toEqual(empty);
   expect(children).toEqual([]);
 });
+
+test("creates a frequency fuzzer", () => {
+  const count = 1e3;
+  const fuzzer = fuzz.frequency([
+    [1, fuzz.return("a")],
+    [5, fuzz.return("b")],
+    [3, fuzz.return("c")]
+  ]);
+
+  const values = take(fuzzer.toRandomRoseTree().toIterable(), count).map(rose => rose.value());
+
+  const expectedA = count / 9;
+  const expectedB = (count * 5) / 9;
+  const expectedC = (count * 3) / 9;
+
+  const as = values.filter(v => v === "a").length;
+  const bs = values.filter(v => v === "b").length;
+  const cs = values.filter(v => v === "c").length;
+
+  expect(as).toBeGreaterThan(expectedA * 0.8);
+  expect(as).toBeLessThan(expectedA * 1.2);
+
+  expect(bs).toBeGreaterThan(expectedB * 0.8);
+  expect(bs).toBeLessThan(expectedB * 1.2);
+
+  expect(cs).toBeGreaterThan(expectedC * 0.8);
+  expect(cs).toBeLessThan(expectedC * 1.2);
+});

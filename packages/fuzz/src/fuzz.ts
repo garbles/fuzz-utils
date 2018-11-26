@@ -445,6 +445,20 @@ class Api {
     });
   }
 
+  frequency<T, U>(contexts: [number, Fuzz<T, U>][]): Fuzz<T, U> {
+    const arr: Fuzz<T, U>[] = [];
+
+    for (let [count, fuzzer] of contexts) {
+      let i = -1;
+
+      while (++i < count) {
+        arr.push(fuzzer);
+      }
+    }
+
+    return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
+  }
+
   /**
    * Similar to array, but is a finite length of pre-defined fuzzers.
    * Shrinks the individual values, but never the length.
