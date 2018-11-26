@@ -11,5 +11,8 @@
     "clean": "project clean",
     "prepublish": "project prepublish",
     "test": "project test"
+  },
+  "devDependencies": {
+    "@garbles/project": "^0.2.0"
   }
 }

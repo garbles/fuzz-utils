@@ -324,12 +324,8 @@ class Api {
 
   integerWithin(min = -1e3, max = 1e3): Random<number> {
     return new Random((size, seed) => {
-      let [value, nextSeed] = integer(0, size, seed);
-      const scale = (max - min) / size;
-      const result = value * scale + min;
-      const rounded = Math.max(Math.min(Math.round(result), max), min);
-
-      return [rounded, nextSeed];
+      let [value, nextSeed] = integer(min, max, seed);
+      return [value, nextSeed];
     });
   }
 
@@ -355,12 +351,8 @@ class Api {
 
   floatWithin(min = -1e3, max = 1e3): Random<number> {
     return new Random((size, seed) => {
-      let [value, nextSeed] = float(0, size, seed);
-      const scale = (max - min) / size;
-      const result = value * scale + min;
-      const rounded = Math.max(Math.min(result, max), min);
-
-      return [rounded, nextSeed];
+      let [value, nextSeed] = float(min, max, seed);
+      return [value, nextSeed];
     });
   }
 

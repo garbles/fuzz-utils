@@ -492,8 +492,31 @@ test("generates uuids", () => {
     });
 });
 
-test("generates growing iterables", () => {
-  const iter = take(rand.posInteger().toLinearGrowthIterable(), 50);
+test("generates growing values", () => {
+  const arr = take(rand.posInteger().toLinearGrowthIterable(), 50);
 
-  expect(iter[0]).toEqual(0);
+  expect(arr[0]).toEqual(0);
+});
+
+test.only("generates an unbiased integer within a range", () => {
+  const count = 1e3;
+  const arr = take(rand.integerWithin(0, 4).toIterable(), count);
+
+  const results = arr.reduce(
+    (acc, num) => {
+      return [
+        acc[0] + Number(num === 0),
+        acc[1] + Number(num === 1),
+        acc[2] + Number(num === 2),
+        acc[3] + Number(num === 3),
+        acc[4] + Number(num === 4)
+      ];
+    },
+    [0, 0, 0, 0, 0]
+  );
+
+  results.forEach(num => {
+    expect(num).toBeGreaterThanOrEqual((count / 5) * 0.8);
+    expect(num).toBeLessThanOrEqual((count / 5) * 1.2);
+  });
 });
