@@ -498,7 +498,7 @@ test("generates growing values", () => {
   expect(arr[0]).toEqual(0);
 });
 
-test.only("generates an unbiased integer within a range", () => {
+test("generates an unbiased integer within a range", () => {
   const count = 1e3;
   const arr = take(rand.integerWithin(0, 4).toIterable(), count);
 
