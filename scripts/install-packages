@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+const util = require("util");
+const cp = require("child_process");
+
+util.promisify(cp.spawn);
+
+const packagesDir = path.join(process.cwd(), "packages");
+const packages = fs.readdirSync(packagesDir);
+
+Promise.all(
+  packages.map(package =>
+    cp.spawn("yarn", ["install"], {
+      stdio: "inherit",
+      cwd: path.join(packagesDir, package)
+    })
+  )
+);

@@ -1,0 +1,19 @@
+{
+  "name": "@garbles/fuzz",
+  "version": "3.0.0",
+  "description": "The best fuzzer for TypeScript",
+  "main": "build/index.js",
+  "repository": "http://github.com/garbles/fuzz",
+  "author": "Gabe Scholz <github@gabe.pizza>",
+  "license": "MIT",
+  "scripts": {
+    "build": "project build",
+    "test": "project test",
+    "clean": "project clean",
+    "prepublish": "project prepublish"
+  },
+  "dependencies": {
+    "@garbles/random": "^8.0.3",
+    "@garbles/shrink": "^0.4.0"
+  }
+}
