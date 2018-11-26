@@ -303,8 +303,6 @@ export class Fuzz<T, U> {
 /**
  * TODO:
  * - date
- * - oneOf
- * - frequency
  */
 class Api {
   /**
@@ -445,6 +443,10 @@ class Api {
     });
   }
 
+  /**
+   * A higher-order fuzzer that returns a fuzzer based on frequency.
+   * @param contexts An array of tuples where each tuple is a frequency of being selected and a fuzzer
+   */
   frequency<T, U>(contexts: [number, Fuzz<T, U>][]): Fuzz<T, U> {
     const arr: Fuzz<T, U>[] = [];
 
@@ -456,6 +458,14 @@ class Api {
       }
     }
 
+    return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
+  }
+
+  /**
+   * A higher-order fuzzer that randomly selects one in given sample.
+   * @param arr An array of fuzzers to be sampled from
+   */
+  oneOf<T, U>(arr: Fuzz<T, U>[]): Fuzz<T, U> {
     return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
   }
 

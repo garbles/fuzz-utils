@@ -597,3 +597,17 @@ test("creates a frequency fuzzer", () => {
   expect(cs).toBeGreaterThan(expectedC * 0.8);
   expect(cs).toBeLessThan(expectedC * 1.2);
 });
+
+test("generates an unbiased oneOf fuzzer", () => {
+  const count = 1e3;
+  const fuzzer = fuzz.oneOf([fuzz.return("a"), fuzz.return("b"), fuzz.return("c")]);
+  const values = take(fuzzer.toRandomRoseTree().toIterable(), count).map(rose => rose.value());
+
+  const as = values.filter(v => v === "a").length;
+  const bs = values.filter(v => v === "b").length;
+  const cs = values.filter(v => v === "c").length;
+
+  [as, bs, cs].forEach(num => {
+    expect(num).toBeLessThanOrEqual((count / 3) * 1.2);
+  });
+});
