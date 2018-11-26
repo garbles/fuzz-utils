@@ -2,9 +2,6 @@
   "name": "fuzz-utils",
   "author": "Gabe Scholz <github@gabe.pizza>",
   "private": true,
-  "devDependencies": {
-    "@garbles/project": "^0.2.0"
-  },
   "scripts": {
     "postinstall": "scripts/install-packages"
   }

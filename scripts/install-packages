@@ -12,9 +12,18 @@ const packages = fs.readdirSync(packagesDir);
 
 Promise.all(
   packages.map(package =>
-    cp.spawn("yarn", ["install"], {
+    cp.spawn("rm", ["-rf", "node_modules"], {
       stdio: "inherit",
       cwd: path.join(packagesDir, package)
     })
+  )
+).then(() =>
+  Promise.all(
+    packages.map(package =>
+      cp.spawn("yarn", ["install"], {
+        stdio: "inherit",
+        cwd: path.join(packagesDir, package)
+      })
+    )
   )
 );
