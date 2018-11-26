@@ -364,6 +364,10 @@ class Api {
     return new Random((size, seed) => integer(32, 126, seed)).map(i => String.fromCharCode(i));
   }
 
+  whitespace(): Random<string> {
+    return this.oneOf([" ", "\t", "\n"]);
+  }
+
   string(): Random<string> {
     return this.array(this.character()).map(arr => arr.join(""));
   }
