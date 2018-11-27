@@ -520,6 +520,47 @@ class Api {
   }
 
   /**
+   * Lazily returns a fuzzer. Useful for recursive data structures.
+   * @param fn Returns a fuzzer
+   */
+  lazy<T>(fn: () => Fuzz<any, T>): Fuzz<any, T> {
+    /**
+     * TODO: THIS is pretty lazy and probably slow. Fix?
+     */
+    return this.undefined().bind(fn);
+  }
+
+  /**
+   * Always returns null.
+   */
+  null(): Fuzz<null, null> {
+    return Fuzz.from(rand.return(null), sh.noop());
+  }
+
+  /**
+   * Always returns undefined.
+   */
+  undefined(): Fuzz<undefined, undefined> {
+    return Fuzz.from(rand.return(undefined), sh.noop());
+  }
+
+  /**
+   * Garbage.
+   */
+  any(): Fuzz<any, any> {
+    return this.oneOf<any, any>([
+      this.integer(),
+      this.float(),
+      this.boolean(),
+      this.string(),
+      this.uuid(),
+      this.array(this.lazy(this.any)),
+      this.null(),
+      this.undefined()
+    ]);
+  }
+
+  /**
    * A higher-order fuzzer that creates an array of another fuzzer.
    * @param fuzz The members of a fuzzer.
    */

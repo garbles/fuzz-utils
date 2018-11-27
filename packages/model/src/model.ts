@@ -1,3 +1,2 @@
-export class Model {}
-
+export class Graph {}
 export default {};

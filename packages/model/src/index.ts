@@ -1,1 +1,1 @@
-export { default, Model } from "./model";
+export { default, Graph } from "./model";

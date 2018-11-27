@@ -36,13 +36,15 @@ test("same result if the filter does not change the outcome", () => {
   expect(a).toEqual(b);
 });
 
-test("filters and maps results until it does not return undefined", () => {
+test("filters and maps results until it does not return rand.FILTER_MAP_REJECT", () => {
   const [result] = rand
     .integer()
     .filterMap(v => {
-      if (v > 90) {
-        return v;
+      if (v <= 90) {
+        return rand.FILTER_MAP_REJECT;
       }
+
+      return v;
     })
     .sample();
 
