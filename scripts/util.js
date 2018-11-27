@@ -8,14 +8,14 @@ util.promisify(cp.spawn);
 exports.runOnAll = cmd => {
   const packagesDir = path.join(process.cwd(), "packages");
   const packages = fs.readdirSync(packagesDir);
-  const [root, ...args] = cmd.split(" ");
 
   return Promise.all(
-    packages.map(package =>
-      cp.spawn(root, args, {
+    packages.map(package => {
+      const [root, ...args] = cmd.replace("#{package}", package).split(" ");
+      return cp.spawn(root, args, {
         stdio: "inherit",
         cwd: path.join(packagesDir, package)
-      })
-    )
+      });
+    })
   );
 };

@@ -1,6 +1,6 @@
 {
   "name": "@garbles/fuzz",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "The best fuzzer for TypeScript",
   "main": "build/index.js",
   "author": "Gabe Scholz <github@gabe.pizza>",
@@ -13,8 +13,8 @@
     "prepublish": "project prepublish"
   },
   "dependencies": {
-    "@garbles/random": "^9.0.0",
-    "@garbles/shrink": "^1.0.0"
+    "@garbles/random": "^9.0.1",
+    "@garbles/shrink": "^1.0.1"
   },
   "devDependencies": {
     "@garbles/project": "^0.2.0"
