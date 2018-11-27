@@ -4,7 +4,7 @@
   "description": "Deterministically generates a series of one-off, pseudo-random values",
   "main": "build/index.js",
   "author": "Gabe Scholz <github@gabe.pizza>",
-  "homepage": "https://github.com/garbles/random",
+  "repository": "https://github.com/garbles/fuzz-utils",
   "license": "Mozilla Public License Version 2.0",
   "scripts": {
     "build": "project build",
