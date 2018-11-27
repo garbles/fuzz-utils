@@ -1,6 +1,6 @@
 {
   "name": "@garbles/fuzz",
-  "version": "4.0.3",
+  "version": "4.1.0",
   "description": "The best fuzzer for TypeScript",
   "main": "build/index.js",
   "author": "Gabe Scholz <github@gabe.pizza>",
