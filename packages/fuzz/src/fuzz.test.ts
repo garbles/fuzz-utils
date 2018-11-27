@@ -395,7 +395,7 @@ test("filters out unwanted values", () => {
   const [rose] = fuzz
     .integer()
     .resize(1e4)
-    .filter(x => x > 200)
+    .suchThat(x => x > 200)
     .toRandomRoseTree()
     .sample();
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);

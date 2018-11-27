@@ -263,13 +263,14 @@ export class Fuzz<T, U> {
    * Filters out any value or shrinken value that does not return true.
    * @param fn Filter function
    */
-  filter(fn: (u: U) => boolean): Fuzz<T, U> {
+  suchThat(fn: (u: U) => boolean): Fuzz<T, U> {
     return new Fuzz((size, seed) => {
       const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
       const nextFilterMap = filterMap.filter(fn);
       return [random, shrink, nextSeed, nextFilterMap];
     });
   }
+  filter = this.suchThat;
 
   /**
    * The result value will not shrink.
