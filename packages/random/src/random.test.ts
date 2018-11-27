@@ -39,9 +39,9 @@ test("same result if the filter does not change the outcome", () => {
 test("filters and maps results until it does not return rand.FILTER_MAP_REJECT", () => {
   const [result] = rand
     .integer()
-    .filterMap(v => {
+    .filterMap((v, REJECT) => {
       if (v <= 90) {
-        return rand.FILTER_MAP_REJECT;
+        return REJECT;
       }
 
       return v;

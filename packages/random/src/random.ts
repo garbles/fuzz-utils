@@ -11,7 +11,8 @@ export type Props = {
   maxSize: number;
 };
 
-const FILTER_MAP_REJECT: unique symbol = Symbol.for("__@GARBLES/RANDOM_REJECT_TOKEN__");
+type RejectToken = { "__@GARBLES/RANDOM__REJECT_TOKEN__": true };
+const REJECT: RejectToken = { "__@GARBLES/RANDOM__REJECT_TOKEN__": true };
 
 function* linearGrowth() {
   let size = -1;
@@ -205,8 +206,8 @@ export class Random<T> {
     });
   }
 
-  filterMap<U>(fn: (t: T) => U | typeof FILTER_MAP_REJECT): Random<U> {
-    return this.map(v => fn(v)).filter(v => v !== FILTER_MAP_REJECT) as Random<U>;
+  filterMap<U>(fn: (t: T, r: RejectToken) => U | RejectToken): Random<U> {
+    return this.map(v => fn(v, REJECT)).filter(v => v !== REJECT) as Random<U>;
   }
 
   bind<U>(fn: (t: T) => Random<U>): Random<U> {
@@ -316,8 +317,6 @@ export class Random<T> {
 }
 
 class Api {
-  FILTER_MAP_REJECT = FILTER_MAP_REJECT;
-
   return<T>(value: T): Random<T> {
     return new Random(constant(value));
   }
