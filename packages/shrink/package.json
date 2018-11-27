@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "author": "Gabe Scholz <github@gabe.pizza>",
   "repository": "https://github.com/garbles/fuzz-utils",
-  "license": "Mozilla Public License Version 2.0",
+  "license": "	MPL-2.0",
   "scripts": {
     "build": "project build",
     "clean": "project clean",
