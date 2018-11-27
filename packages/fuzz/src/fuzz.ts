@@ -385,10 +385,6 @@ export class Fuzz<T, U> {
   }
 }
 
-/**
- * TODO:
- * - date
- */
 class Api {
   /**
    * Wraps a plain value in a fuzzer.
