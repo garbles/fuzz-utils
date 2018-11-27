@@ -26,13 +26,13 @@
     ts-jest "^23.10.3"
     typescript "^3.1.1"
 
-"@garbles/random@^9.0.0":
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/@garbles/random/-/random-9.0.0.tgz#ec01ebe9709167e0a44424a9ed87452294d5d6fa"
+"@garbles/random@^10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@garbles/random/-/random-10.1.0.tgz#792f881dab698145765d3187eb36c47c964cd98c"
 
-"@garbles/shrink@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@garbles/shrink/-/shrink-1.0.0.tgz#730ce1f7712fea3df3f42585cd9df23b78e40f4f"
+"@garbles/shrink@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@garbles/shrink/-/shrink-1.0.1.tgz#a2dbcd2a88536db88549d8ae4d7a2eb4fb744a93"
 
 "@types/jest@^23.3.3":
   version "23.3.9"

@@ -675,3 +675,22 @@ describe("biases values toward extremes", () => {
     test("maxSize === 0", () => checker(0, 1));
   });
 });
+
+test("lazily returns a fuzzer", () => {
+  const fn = jest.fn(() => fuzz.string());
+  const fuzzer = fuzz.lazy(fn);
+
+  expect(fn).toHaveBeenCalledTimes(0);
+
+  let [rose] = fuzzer.toRandomRoseTree().sample();
+  let { value } = extract(rose);
+
+  expect(typeof value).toEqual("string");
+  expect(fn).toHaveBeenCalledTimes(1);
+
+  [rose] = fuzzer.toRandomRoseTree().sample();
+  value = extract(rose).value;
+
+  expect(typeof value).toEqual("string");
+  expect(fn).toHaveBeenCalledTimes(2);
+});
