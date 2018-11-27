@@ -16,49 +16,39 @@ const biasedRandomNumber = (
   isNegative: boolean,
   isInteger: boolean
 ): Random<number> => {
-  const posNumber = isInteger ? rand.posInteger : rand.posFloat;
-  const negNumber = isInteger ? rand.negInteger : rand.negFloat;
-  const number = isInteger ? rand.integer : rand.float;
+  const posNumber = isInteger ? rand.posInteger().noEmpty() : rand.posFloat().noEmpty();
+  const negNumber = isInteger ? rand.negInteger().noEmpty() : rand.negFloat().noEmpty();
+  const number = isInteger ? rand.integer().noEmpty() : rand.float().noEmpty();
 
   return new Random((size, seed) => {
-    const gens: [number, Random<number>][] = [[2, rand.return(0)]];
+    const gens: [number, Random<number>][] = [[1, rand.return(0)]];
 
-    if (isPositive) {
+    if (isPositive && size > 0) {
       gens.push([1, rand.return(size)]);
     }
 
-    if (isNegative) {
+    if (isNegative && size > 0) {
       gens.push([1, rand.return(-size)]);
     }
 
     if (isPositive && !isNegative && size > 0) {
-      gens.push([6, posNumber().noEmpty()]);
+      gens.push([6, posNumber]);
     }
 
     if (isNegative && !isPositive && size > 0) {
-      gens.push([6, negNumber().noEmpty()]);
+      gens.push([6, negNumber]);
     }
 
     if (isPositive && isNegative && size > 0) {
-      gens.push([6, number().noEmpty()]);
+      gens.push([6, number]);
     }
 
     if (isPositive && size > 50) {
-      gens.push([
-        3,
-        posNumber()
-          .noEmpty()
-          .resize(50)
-      ]);
+      gens.push([3, posNumber.resize(50)]);
     }
 
     if (isNegative && size > 50) {
-      gens.push([
-        3,
-        negNumber()
-          .noEmpty()
-          .resize(50)
-      ]);
+      gens.push([3, negNumber.resize(50)]);
     }
 
     return rand.frequency(gens).generator(size, seed);
@@ -84,6 +74,7 @@ const biasedRandomString = (): Random<string> =>
         ]);
         gens.push([3, rand.string().filter(s => s.length > 10)]);
       } else {
+        // size > 50
         gens.push([
           5,
           rand
@@ -536,15 +527,14 @@ class Api {
    * @param fuzz The members of a fuzzer.
    */
   array<T, U>(fuzz: Fuzz<T, U>): Fuzz<T[], U[]> {
-    const biasedSize = biasedRandomNumber(true, false, true);
+    const biasedLength = biasedRandomNumber(true, false, true);
 
     return new Fuzz((size, seed) => {
-      const [maxLength, seed2] = biasedSize.generator(size, seed);
-      const [random, shrink, seed3, filterMap] = fuzz.generator(maxLength, seed2);
-      const nextRandom = rand.array(random);
+      const [random, shrink, seed2, filterMap] = fuzz.generator(size, seed);
+      const nextRandom = biasedLength.bind(maxLength => rand.array(random).resize(maxLength));
       const nextShrink = sh.array(shrink);
 
-      return [nextRandom, nextShrink, seed3, filterMap.toArray()];
+      return [nextRandom, nextShrink, seed2, filterMap.toArray()];
     });
   }
 

@@ -60,6 +60,11 @@ const extract = <T>(rose: RoseTree<any, T>): Results<T> => {
   };
 };
 
+const expectWithin25Percent = (value: number, expected: number) => {
+  expect(value).toBeGreaterThanOrEqual(expected / 1.25);
+  expect(value).toBeLessThanOrEqual(expected * 1.25);
+};
+
 test("shrinks positive integers", () => {
   const [rose] = fuzz
     .posInteger()
@@ -571,7 +576,7 @@ test("creates a growing rose tree of values where the first is always the empty 
 });
 
 test("creates a frequency fuzzer", () => {
-  const count = 1e3;
+  const count = 2e3;
   const fuzzer = fuzz.frequency([
     [1, fuzz.return("a")],
     [5, fuzz.return("b")],
@@ -588,14 +593,9 @@ test("creates a frequency fuzzer", () => {
   const bs = values.filter(v => v === "b").length;
   const cs = values.filter(v => v === "c").length;
 
-  expect(as).toBeGreaterThan(expectedA * 0.8);
-  expect(as).toBeLessThan(expectedA * 1.2);
-
-  expect(bs).toBeGreaterThan(expectedB * 0.8);
-  expect(bs).toBeLessThan(expectedB * 1.2);
-
-  expect(cs).toBeGreaterThan(expectedC * 0.8);
-  expect(cs).toBeLessThan(expectedC * 1.2);
+  expectWithin25Percent(as, expectedA);
+  expectWithin25Percent(bs, expectedB);
+  expectWithin25Percent(cs, expectedC);
 });
 
 test("generates an unbiased oneOf fuzzer", () => {
@@ -607,7 +607,71 @@ test("generates an unbiased oneOf fuzzer", () => {
   const bs = values.filter(v => v === "b").length;
   const cs = values.filter(v => v === "c").length;
 
-  [as, bs, cs].forEach(num => {
-    expect(num).toBeLessThanOrEqual((count / 3) * 1.2);
+  [as, bs, cs].forEach(num => expectWithin25Percent(num, count / 3));
+});
+
+describe("biases values toward extremes", () => {
+  const count = 2e3;
+
+  describe("numbers", () => {
+    const checker = (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
+      const fuzzer = fuzz.integer();
+      const values = take(fuzzer.toRandomRoseTree().toIterable({ maxSize }), count).map(rose =>
+        rose.value()
+      );
+
+      const zeros = values.filter(v => v === 0).length;
+      const min = values.filter(v => v === -maxSize).length;
+      const max = values.filter(v => v === maxSize).length;
+
+      expectWithin25Percent(zeros, count * zeroProb);
+      expectWithin25Percent(min, count * minProb);
+      expectWithin25Percent(max, count * maxProb);
+    };
+
+    test("maxSize === 1000", () => checker(1000, 1 / 15, 1 / 15, 1 / 15));
+    test("maxSize === 50", () => checker(50, 1 / 9, 1 / 9, 1 / 9));
+    test("maxSize === 0", () => checker(0, 1, 1, 1)); // min === max === 0
+  });
+
+  describe("strings", () => {
+    const checker = (maxSize: number, zeroProb: number, shortProb: number, longProb: number) => {
+      const fuzzer = fuzz.string();
+      const values = take(fuzzer.toRandomRoseTree().toIterable({ maxSize }), count).map(rose =>
+        rose.value()
+      );
+
+      const zeros = values.filter(v => v.length === 0).length;
+      const shorts = values.filter(v => v.length <= 10 && v.length > 0).length;
+      const longs = values.filter(v => v.length > 50).length;
+
+      expectWithin25Percent(zeros, count * zeroProb);
+      expectWithin25Percent(shorts, count * shortProb);
+      expectWithin25Percent(longs, count * longProb);
+    };
+
+    test("maxSize === 100", () => {
+      checker(100, 1 / 10, 6 / 10, 1 / 10);
+    });
+
+    test("maxSize === 50", () => checker(50, 1 / 10, 6 / 10, 0));
+    test("maxSize === 10", () => checker(10, 1 / 10, 9 / 10, 0));
+    test("maxSize === 0", () => checker(0, 1, 0, 0));
+  });
+
+  describe("arrays", () => {
+    const checker = (maxSize: number, zeroProb: number) => {
+      const fuzzer = fuzz.array(fuzz.return(0));
+      const values = take(fuzzer.toRandomRoseTree().toIterable({ maxSize }), count).map(rose =>
+        rose.value()
+      );
+
+      const zeros = values.filter(v => v.length === 0).length;
+      expectWithin25Percent(zeros, count * zeroProb);
+    };
+
+    test("maxSize === 100", () => checker(100, 1 / 8));
+    test("maxSize === 50", () => checker(50, 1 / 6));
+    test("maxSize === 0", () => checker(0, 1));
   });
 });

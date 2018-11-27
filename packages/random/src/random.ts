@@ -390,7 +390,7 @@ class Api {
         '4' + strs.slice(6,8).join('').slice(1) + '-' +
         strs.slice(8, 10).join('') + '-' +
         strs.slice(10, 16).join('')
-      )
+      );
 
       return [value, nextSeed];
     });
