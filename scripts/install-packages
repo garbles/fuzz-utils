@@ -1,29 +1,4 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
-const util = require("util");
-const cp = require("child_process");
-
-util.promisify(cp.spawn);
-
-const packagesDir = path.join(process.cwd(), "packages");
-const packages = fs.readdirSync(packagesDir);
-
-Promise.all(
-  packages.map(package =>
-    cp.spawn("rm", ["-rf", "node_modules"], {
-      stdio: "inherit",
-      cwd: path.join(packagesDir, package)
-    })
-  )
-).then(() =>
-  Promise.all(
-    packages.map(package =>
-      cp.spawn("yarn", ["install"], {
-        stdio: "inherit",
-        cwd: path.join(packagesDir, package)
-      })
-    )
-  )
-);
+const { runOnAll } = require("./util");
+runOnAll("rm -rf node_modules").then(() => runOnAll("yarn install"));
