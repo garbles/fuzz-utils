@@ -1,5 +1,5 @@
-import rand, { Random, Seed } from "@garbles/random";
-import sh, { Shrink } from "@garbles/shrink";
+import rand, { Random, Seed } from "@fuzz-utils/random";
+import sh, { Shrink } from "@fuzz-utils/shrink";
 
 type Filter = { __FILTER__: true };
 

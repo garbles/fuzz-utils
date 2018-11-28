@@ -16,6 +16,14 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
+"@fuzz-utils/random@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@fuzz-utils/random/-/random-1.0.0.tgz#6763c0d7c42417edf370b6fcaa58a75468235abb"
+
+"@fuzz-utils/shrink@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@fuzz-utils/shrink/-/shrink-1.0.0.tgz#66ff1d5f242560ae38aaf154fa988beb34d4e9f3"
+
 "@garbles/project@^0.2.0":
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@garbles/project/-/project-0.2.0.tgz#b80c69fca2b4ec628a6ceaf037287e7a03dd0bee"
@@ -25,14 +33,6 @@
     jest "^23.6.0"
     ts-jest "^23.10.3"
     typescript "^3.1.1"
-
-"@garbles/random@^10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@garbles/random/-/random-10.1.0.tgz#792f881dab698145765d3187eb36c47c964cd98c"
-
-"@garbles/shrink@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@garbles/shrink/-/shrink-1.0.1.tgz#a2dbcd2a88536db88549d8ae4d7a2eb4fb744a93"
 
 "@types/jest@^23.3.3":
   version "23.3.9"
