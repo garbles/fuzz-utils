@@ -9,7 +9,9 @@ test("creating a fuzzer is the same as evaluating it from a string", () => {
   const result = ast.object({
     a: ast.string(),
     b: ast.array(ast.boolean()),
-    c: ast.tuple([ast.object({ d: ast.float() })])
+    c: ast.tuple([ast.object({ d: ast.float() })]),
+    d: ast.nullable(ast.string()),
+    e: ast.oneOf([ast.return("a"), ast.return("b"), ast.return("c")]).maybe()
   });
 
   const fuzzer1 = result.toFuzz();

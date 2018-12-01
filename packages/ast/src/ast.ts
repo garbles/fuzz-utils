@@ -4,6 +4,52 @@ abstract class ASTNode<T> {
   abstract toFuzz(): Fuzz<any, T>;
   abstract toString(prefix: string): string;
   abstract toJSON(): { type: string };
+
+  nullable(): NullableASTNode<T> {
+    return new NullableASTNode(this);
+  }
+
+  maybe(): MaybeASTNode<T> {
+    return new MaybeASTNode(this);
+  }
+}
+
+class NullableASTNode<T> extends ASTNode<T | null> {
+  constructor(private node: ASTNode<T>) {
+    super();
+  }
+
+  toFuzz() {
+    return this.node.toFuzz().nullable();
+  }
+
+  toString(prefix = "fuzz") {
+    const node = this.node.toString(prefix);
+    return `${node}.nullable()`;
+  }
+
+  toJSON() {
+    return { type: "nullable", node: this.node.toJSON() };
+  }
+}
+
+class MaybeASTNode<T> extends ASTNode<T | undefined> {
+  constructor(private node: ASTNode<T>) {
+    super();
+  }
+
+  toFuzz() {
+    return this.node.toFuzz().maybe();
+  }
+
+  toString(prefix = "fuzz") {
+    const node = this.node.toString(prefix);
+    return `${node}.maybe()`;
+  }
+
+  toJSON() {
+    return { type: "maybe", node: this.node.toJSON() };
+  }
 }
 
 class NumberASTNode extends ASTNode<number> {
@@ -334,6 +380,14 @@ class Api {
   object<T>(elements: { [K in keyof T]: ASTNode<T[K]> }) {
     return new ObjectASTNode(elements);
   }
+
+  nullable<T>(node: ASTNode<T>) {
+    return new NullableASTNode(node);
+  }
+
+  maybe<T>(node: ASTNode<T>) {
+    return new MaybeASTNode(node);
+  }
 }
 
 export default new Api();
@@ -372,7 +426,7 @@ export const fromJSON = (json: any): ASTNode<any> => {
     }
     case "return":
       return new ReturnASTNode(json.element);
-    case "object":
+    case "object": {
       const keys = Object.keys(json.elements);
       const elements = keys.reduce(
         (acc, key) => {
@@ -382,6 +436,15 @@ export const fromJSON = (json: any): ASTNode<any> => {
         {} as any
       );
       return new ObjectASTNode(elements);
+    }
+    case "nullable": {
+      const node = fromJSON(json.node);
+      return new NullableASTNode(node);
+    }
+    case "maybe": {
+      const node = fromJSON(json.node);
+      return new MaybeASTNode(node);
+    }
     default:
       return new ReturnASTNode(undefined);
   }
