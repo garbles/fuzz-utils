@@ -260,6 +260,35 @@ export class Fuzz<T, U> {
   }
 
   /**
+   * Merges two fuzzers into a single fuzzer
+   * @param fuzz Fuzz to be merged
+   * @param fn Mapping function to merge both values
+   */
+  merge<V, W, X>(fuzz: Fuzz<V, W>, fn: (u: U, w: W) => X): Fuzz<[T, V], X> {
+    return new Fuzz((size, seed) => {
+      const [randomT, shrinkT, seed2, filterMapT] = this.generator(size, seed);
+      const [randomV, shrinkV, seed3, filterMapV] = fuzz.generator(size, seed2);
+
+      const nextRandom = rand.tuple([randomT, randomV]);
+      const nextShrink = sh.tuple([shrinkT, shrinkV]);
+
+      const nextFilterMap: FilterMap<[T, V], X> = new FilterMap(value => {
+        const [t, v] = value;
+        const u = filterMapT.apply(t);
+        const w = filterMapV.apply(v);
+
+        if (isFilter(u) || isFilter(w)) {
+          return FILTER;
+        }
+
+        return fn(u, w);
+      });
+
+      return [nextRandom, nextShrink, seed3, nextFilterMap];
+    });
+  }
+
+  /**
    * Filters out any value or shrinken value that does not return true.
    * @param fn Filter function
    */
@@ -605,6 +634,8 @@ class Api {
   oneOf<T, U>(arr: Fuzz<T, U>[]): Fuzz<T, U> {
     return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
   }
+
+  // merge<T, U>(fuzzT: Fuzz<any, T>, fuzzU: Fuzz<any, U>): Fuzz<any, T & U> {
 
   /**
    * Similar to array, but is a finite length of pre-defined fuzzers.

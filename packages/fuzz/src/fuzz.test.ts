@@ -694,3 +694,19 @@ test("lazily returns a fuzzer", () => {
   expect(typeof value).toEqual("string");
   expect(fn).toHaveBeenCalledTimes(2);
 });
+
+test("merges two fuzzers together", () => {
+  const fuzzA = fuzz.integer();
+  const fuzzB = fuzz.boolean();
+
+  const fuzzer = fuzzA.merge(fuzzB, (a, b) => {
+    return [a, b, 12] as [number, boolean, 12];
+  });
+
+  let [rose] = fuzzer.toRandomRoseTree().sample();
+  let { value } = extract(rose);
+
+  expect(typeof value[0]).toEqual("number");
+  expect(typeof value[1]).toEqual("boolean");
+  expect(value[2]).toEqual(12);
+});
