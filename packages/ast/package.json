@@ -1,6 +1,6 @@
 {
   "name": "@fuzz-utils/ast",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "AST representation of fuzzers",
   "main": "build/index.js",
   "author": "Gabe Scholz <github@gabe.pizza>",
