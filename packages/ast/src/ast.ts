@@ -5,16 +5,16 @@ abstract class ASTNode<T> {
   abstract toString(prefix: string): string;
   abstract toJSON(): { type: string };
 
-  nullable(): NullableASTNode<T> {
-    return new NullableASTNode(this);
+  nullable(): NullableNode<T> {
+    return new NullableNode(this);
   }
 
-  maybe(): MaybeASTNode<T> {
-    return new MaybeASTNode(this);
+  maybe(): MaybeNode<T> {
+    return new MaybeNode(this);
   }
 }
 
-class NullableASTNode<T> extends ASTNode<T | null> {
+class NullableNode<T> extends ASTNode<T | null> {
   constructor(private node: ASTNode<T>) {
     super();
   }
@@ -33,7 +33,7 @@ class NullableASTNode<T> extends ASTNode<T | null> {
   }
 }
 
-class MaybeASTNode<T> extends ASTNode<T | undefined> {
+class MaybeNode<T> extends ASTNode<T | undefined> {
   constructor(private node: ASTNode<T>) {
     super();
   }
@@ -52,7 +52,7 @@ class MaybeASTNode<T> extends ASTNode<T | undefined> {
   }
 }
 
-class NumberASTNode extends ASTNode<number> {
+class NumberNode extends ASTNode<number> {
   // TODO: Actually use these
   constructor(private min?: number, private max?: number) {
     super();
@@ -71,7 +71,7 @@ class NumberASTNode extends ASTNode<number> {
   }
 }
 
-class IntegerASTNode extends ASTNode<number> {
+class IntegerNode extends ASTNode<number> {
   constructor(private min?: number, private max?: number) {
     super();
   }
@@ -89,7 +89,7 @@ class IntegerASTNode extends ASTNode<number> {
   }
 }
 
-class FloatASTNode extends ASTNode<number> {
+class FloatNode extends ASTNode<number> {
   constructor(private min?: number, private max?: number) {
     super();
   }
@@ -107,7 +107,7 @@ class FloatASTNode extends ASTNode<number> {
   }
 }
 
-class BooleanASTNode extends ASTNode<boolean> {
+class BooleanNode extends ASTNode<boolean> {
   constructor() {
     super();
   }
@@ -125,7 +125,7 @@ class BooleanASTNode extends ASTNode<boolean> {
   }
 }
 
-class StringASTNode extends ASTNode<string> {
+class StringNode extends ASTNode<string> {
   constructor(private max?: number) {
     super();
   }
@@ -143,7 +143,7 @@ class StringASTNode extends ASTNode<string> {
   }
 }
 
-class UuidASTNode extends ASTNode<string> {
+class UuidNode extends ASTNode<string> {
   constructor() {
     super();
   }
@@ -161,7 +161,7 @@ class UuidASTNode extends ASTNode<string> {
   }
 }
 
-class AnyASTNode extends ASTNode<any> {
+class AnyNode extends ASTNode<any> {
   constructor() {
     super();
   }
@@ -179,7 +179,7 @@ class AnyASTNode extends ASTNode<any> {
   }
 }
 
-class ArrayASTNode<T> extends ASTNode<T[]> {
+class ArrayNode<T> extends ASTNode<T[]> {
   constructor(private readonly elements: ASTNode<T>) {
     super();
   }
@@ -200,7 +200,7 @@ class ArrayASTNode<T> extends ASTNode<T[]> {
   }
 }
 
-class TupleASTNode<T> extends ASTNode<T[]> {
+class TupleNode<T> extends ASTNode<T[]> {
   constructor(private readonly elements: ASTNode<T>[]) {
     super();
   }
@@ -221,7 +221,7 @@ class TupleASTNode<T> extends ASTNode<T[]> {
   }
 }
 
-class OneOfASTNode<T> extends ASTNode<T> {
+class OneOfNode<T> extends ASTNode<T> {
   constructor(private readonly elements: ASTNode<T>[]) {
     super();
   }
@@ -242,7 +242,7 @@ class OneOfASTNode<T> extends ASTNode<T> {
   }
 }
 
-class SpreadASTNode<T> extends ASTNode<T> {
+class SpreadNode<T> extends ASTNode<T> {
   constructor(private readonly elements: ASTNode<T>[]) {
     super();
   }
@@ -264,7 +264,7 @@ class SpreadASTNode<T> extends ASTNode<T> {
   }
 }
 
-class ReturnASTNode<T> extends ASTNode<T> {
+class ReturnNode<T> extends ASTNode<T> {
   constructor(private readonly element: T) {
     super();
   }
@@ -283,7 +283,7 @@ class ReturnASTNode<T> extends ASTNode<T> {
   }
 }
 
-class ObjectASTNode<T> extends ASTNode<T> {
+class ObjectNode<T> extends ASTNode<T> {
   constructor(private readonly elements: { [K in keyof T]: ASTNode<T[K]> }) {
     super();
   }
@@ -330,63 +330,63 @@ class ObjectASTNode<T> extends ASTNode<T> {
 
 class Api {
   return<T>(element: T) {
-    return new ReturnASTNode(element);
+    return new ReturnNode(element);
   }
 
   number(min?: number, max?: number) {
-    return new NumberASTNode(min, max);
+    return new NumberNode(min, max);
   }
 
   integer(min?: number, max?: number) {
-    return new IntegerASTNode(min, max);
+    return new IntegerNode(min, max);
   }
 
   float(min?: number, max?: number) {
-    return new FloatASTNode(min, max);
+    return new FloatNode(min, max);
   }
 
   boolean() {
-    return new BooleanASTNode();
+    return new BooleanNode();
   }
 
   string(max?: number) {
-    return new StringASTNode(max);
+    return new StringNode(max);
   }
 
   uuid() {
-    return new UuidASTNode();
+    return new UuidNode();
   }
 
   any() {
-    return new AnyASTNode();
+    return new AnyNode();
   }
 
   array<T>(elements: ASTNode<T>) {
-    return new ArrayASTNode(elements);
+    return new ArrayNode(elements);
   }
 
   tuple<T>(elements: ASTNode<T>[]) {
-    return new TupleASTNode(elements);
+    return new TupleNode(elements);
   }
 
   oneOf<T>(elements: ASTNode<T>[]) {
-    return new OneOfASTNode(elements);
+    return new OneOfNode(elements);
   }
 
   spread<T>(elements: ASTNode<T>[]) {
-    return new SpreadASTNode(elements);
+    return new SpreadNode(elements);
   }
 
   object<T>(elements: { [K in keyof T]: ASTNode<T[K]> }) {
-    return new ObjectASTNode(elements);
+    return new ObjectNode(elements);
   }
 
   nullable<T>(node: ASTNode<T>) {
-    return new NullableASTNode(node);
+    return new NullableNode(node);
   }
 
   maybe<T>(node: ASTNode<T>) {
-    return new MaybeASTNode(node);
+    return new MaybeNode(node);
   }
 }
 
@@ -395,37 +395,37 @@ export default new Api();
 export const fromJSON = (json: any): ASTNode<any> => {
   switch (json.type) {
     case "number":
-      return new NumberASTNode(json.min, json.max);
+      return new NumberNode(json.min, json.max);
     case "integer":
-      return new IntegerASTNode(json.min, json.max);
+      return new IntegerNode(json.min, json.max);
     case "float":
-      return new FloatASTNode(json.min, json.max);
+      return new FloatNode(json.min, json.max);
     case "boolean":
-      return new BooleanASTNode();
+      return new BooleanNode();
     case "string":
-      return new StringASTNode(json.max);
+      return new StringNode(json.max);
     case "uuid":
-      return new UuidASTNode();
+      return new UuidNode();
     case "any":
-      return new AnyASTNode();
+      return new AnyNode();
     case "array": {
       const elements = fromJSON(json.elements);
-      return new ArrayASTNode(elements);
+      return new ArrayNode(elements);
     }
     case "tuple": {
       const elements = json.elements.map(fromJSON);
-      return new TupleASTNode(elements);
+      return new TupleNode(elements);
     }
     case "oneOf": {
       const elements = json.elements.map(fromJSON);
-      return new OneOfASTNode(elements);
+      return new OneOfNode(elements);
     }
     case "spread": {
       const elements = json.elements.map(fromJSON);
-      return new SpreadASTNode(elements);
+      return new SpreadNode(elements);
     }
     case "return":
-      return new ReturnASTNode(json.element);
+      return new ReturnNode(json.element);
     case "object": {
       const keys = Object.keys(json.elements);
       const elements = keys.reduce(
@@ -435,17 +435,17 @@ export const fromJSON = (json: any): ASTNode<any> => {
         },
         {} as any
       );
-      return new ObjectASTNode(elements);
+      return new ObjectNode(elements);
     }
     case "nullable": {
       const node = fromJSON(json.node);
-      return new NullableASTNode(node);
+      return new NullableNode(node);
     }
     case "maybe": {
       const node = fromJSON(json.node);
-      return new MaybeASTNode(node);
+      return new MaybeNode(node);
     }
     default:
-      return new ReturnASTNode(undefined);
+      return new ReturnNode(undefined);
   }
 };
