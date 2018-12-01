@@ -284,15 +284,15 @@ class ReturnNode<T> extends ASTNode<T> {
 }
 
 class ObjectNode<T> extends ASTNode<T> {
-  constructor(private readonly elements: { [K in keyof T]: ASTNode<T[K]> }) {
+  constructor(private readonly elements: { [K in keyof T]: [K, ASTNode<T[K]>] }[keyof T][]) {
     super();
   }
 
   toFuzz() {
-    const keys = Object.keys(this.elements) as (keyof T)[];
-    const result = keys.reduce(
-      (acc, key) => {
-        acc[key] = this.elements[key].toFuzz();
+    const result = this.elements.reduce(
+      (acc, element) => {
+        const [key, node] = element;
+        acc[key] = node.toFuzz();
         return acc;
       },
       {} as { [K in keyof T]: Fuzz<any, T[K]> }
@@ -302,11 +302,10 @@ class ObjectNode<T> extends ASTNode<T> {
   }
 
   toString(prefix = "fuzz") {
-    const keys = Object.keys(this.elements) as (keyof T)[];
-
-    const result = keys.reduce(
-      (acc, key) => {
-        return acc.concat(`"${key}": ${this.elements[key].toString(prefix)}`);
+    const result = this.elements.reduce(
+      (acc, element) => {
+        const [key, node] = element;
+        return acc.concat(`"${key}": ${node.toString(prefix)}`);
       },
       [] as string[]
     );
@@ -315,13 +314,13 @@ class ObjectNode<T> extends ASTNode<T> {
   }
 
   toJSON() {
-    const keys = Object.keys(this.elements) as (keyof T)[];
-    const elements = keys.reduce(
-      (acc, key) => {
-        acc[key] = this.elements[key].toJSON();
-        return acc;
+    const elements = this.elements.reduce(
+      (acc, element) => {
+        const [key, node] = element;
+        const next: [any, any] = [key, node.toJSON()];
+        return [...acc, next];
       },
-      {} as { [K in keyof T]: { type: string } }
+      [] as [any, any][]
     );
 
     return { type: "object", elements };
@@ -377,7 +376,7 @@ class Api {
     return new SpreadNode(elements);
   }
 
-  object<T>(elements: { [K in keyof T]: ASTNode<T[K]> }) {
+  object<T>(elements: { [K in keyof T]: [K, ASTNode<T[K]>] }[keyof T][]) {
     return new ObjectNode(elements);
   }
 
@@ -408,6 +407,8 @@ export const fromJSON = (json: any): ASTNode<any> => {
       return new UuidNode();
     case "any":
       return new AnyNode();
+    case "return":
+      return new ReturnNode(json.element);
     case "array": {
       const elements = fromJSON(json.elements);
       return new ArrayNode(elements);
@@ -424,17 +425,15 @@ export const fromJSON = (json: any): ASTNode<any> => {
       const elements = json.elements.map(fromJSON);
       return new SpreadNode(elements);
     }
-    case "return":
-      return new ReturnNode(json.element);
     case "object": {
-      const keys = Object.keys(json.elements);
-      const elements = keys.reduce(
-        (acc, key) => {
-          acc[key] = fromJSON(json.elements[key]);
-          return acc;
+      const elements = json.elements.reduce(
+        (acc: any, element: any) => {
+          const [key, node] = element;
+          return [...acc, [key, fromJSON(node)]];
         },
-        {} as any
+        [] as [any, any][]
       );
+
       return new ObjectNode(elements);
     }
     case "nullable": {
