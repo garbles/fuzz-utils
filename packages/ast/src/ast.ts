@@ -1,378 +1,270 @@
 import fuzz, { Fuzz } from "@fuzz-utils/fuzz";
 
-type NumberASTNode = { type: "number"; min?: number; max?: number };
-type IntegerASTNode = { type: "integer"; min?: number; max?: number };
-type FloatASTNode = { type: "float"; min?: number; max?: number };
-type BooleanASTNode = { type: "boolean" };
-type StringASTNode = { type: "string"; max?: number };
-type UuidASTNode = { type: "uuid" };
-type AnyASTNode = { type: "any" };
-type ArrayASTNode<T> = { type: "array"; elements: T };
-type TupleASTNode<T> = { type: "tuple"; elements: T };
-type ObjectASTNode<T> = { type: "object"; elements: T };
-type OneOfASTNode<T> = { type: "oneOf"; elements: T };
-type SpreadASTNode<T> = { type: "spread"; elements: T };
-type ReturnASTNode<T> = { type: "return"; elements: T };
+abstract class ASTNode<T> {
+  abstract toFuzz(): Fuzz<any, T>;
+  abstract toString(prefix: string): string;
+}
 
-type ASTNode<T = any> =
-  | NumberASTNode
-  | IntegerASTNode
-  | FloatASTNode
-  | BooleanASTNode
-  | StringASTNode
-  | UuidASTNode
-  | AnyASTNode
-  | ArrayASTNode<T>
-  | TupleASTNode<T>
-  | ObjectASTNode<T>
-  | OneOfASTNode<T>
-  | SpreadASTNode<T>
-  | ReturnASTNode<T>;
+class NumberASTNode extends ASTNode<number> {
+  constructor(private min?: number, private max?: number) {
+    super();
+  }
 
-type Tag<T, U = any> = T & { __OPAQUE_TAG__: U };
-type GetTag<T> = T extends { __OPAQUE_TAG__: infer U } ? U : never;
+  toFuzz() {
+    return fuzz.number();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.number()`;
+  }
+}
+
+class IntegerASTNode extends ASTNode<number> {
+  constructor(private min?: number, private max?: number) {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.integer();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.integer()`;
+  }
+}
+
+class FloatASTNode extends ASTNode<number> {
+  constructor(private min?: number, private max?: number) {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.float();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.float()`;
+  }
+}
+
+class BooleanASTNode extends ASTNode<boolean> {
+  constructor() {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.boolean();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.boolean()`;
+  }
+}
+
+class StringASTNode extends ASTNode<string> {
+  constructor(private max?: number) {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.string();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.string()`;
+  }
+}
+
+class UuidASTNode extends ASTNode<string> {
+  constructor() {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.uuid();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.uuid()`;
+  }
+}
+
+class AnyASTNode extends ASTNode<any> {
+  constructor() {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.any();
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.any()`;
+  }
+}
+
+class ArrayASTNode<T> extends ASTNode<T[]> {
+  constructor(private readonly elements: ASTNode<T>) {
+    super();
+  }
+
+  toFuzz() {
+    const elements = this.elements.toFuzz();
+    return fuzz.array(elements);
+  }
+
+  toString(prefix = "fuzz") {
+    const elements = this.elements.toString(prefix);
+    return `${prefix}.array(${elements})`;
+  }
+}
+
+class TupleASTNode<T> extends ASTNode<T[]> {
+  constructor(private readonly elements: ASTNode<T>[]) {
+    super();
+  }
+
+  toFuzz() {
+    const elements = this.elements.map(el => el.toFuzz());
+    return fuzz.tuple(elements);
+  }
+
+  toString(prefix = "fuzz") {
+    const elements = this.elements.map(el => el.toString(prefix));
+    return `${prefix}.tuple([${elements.join(", ")}])`;
+  }
+}
+
+class OneOfASTNode<T> extends ASTNode<T> {
+  constructor(private readonly elements: ASTNode<T>[]) {
+    super();
+  }
+
+  toFuzz() {
+    const elements = this.elements.map(el => el.toFuzz());
+    return fuzz.oneOf(elements);
+  }
+
+  toString(prefix = "fuzz") {
+    const elements = this.elements.map(el => el.toString(prefix));
+    return `${prefix}.oneOf([${elements.join(", ")}])`;
+  }
+}
+
+class SpreadASTNode<T> extends ASTNode<T> {
+  constructor(private readonly elements: ASTNode<T>[]) {
+    super();
+  }
+
+  // TODO: fix in random. Spread should be able to take 1 or 0 elements
+  toFuzz() {
+    const elements = this.elements.map(el => el.toFuzz());
+    return fuzz.spread(elements as any) as any;
+  }
+
+  toString(prefix = "fuzz") {
+    const elements = this.elements.map(el => el.toString(prefix));
+    return `${prefix}.spread([${elements.join(", ")}])`;
+  }
+}
+
+class ReturnASTNode<T> extends ASTNode<T> {
+  constructor(private readonly element: T) {
+    super();
+  }
+
+  toFuzz() {
+    return fuzz.return(this.element);
+  }
+
+  toString(prefix = "fuzz") {
+    return `${prefix}.return(${JSON.stringify(this.element)})`;
+  }
+}
+
+class ObjectASTNode<T> extends ASTNode<T> {
+  constructor(private readonly elements: { [K in keyof T]: ASTNode<T[K]> }) {
+    super();
+  }
+
+  toFuzz() {
+    const keys = Object.keys(this.elements) as (keyof T)[];
+    const result = keys.reduce(
+      (acc, key) => {
+        acc[key] = this.elements[key].toFuzz();
+        return acc;
+      },
+      {} as { [K in keyof T]: Fuzz<any, T[K]> }
+    );
+
+    return fuzz.object(result);
+  }
+
+  toString(prefix = "fuzz") {
+    const keys = Object.keys(this.elements) as (keyof T)[];
+
+    const result = keys.reduce(
+      (acc, key) => {
+        return acc.concat(`"${key}": ${this.elements[key].toString(prefix)}`);
+      },
+      [] as string[]
+    );
+
+    return `${prefix}.object({ ${result.join(", ")} })`;
+  }
+}
 
 class Api {
-  number(opts: { min?: number; max?: number } = {}): Tag<NumberASTNode, number> {
-    return ({
-      ...opts,
-      type: "number" as "number"
-    } as NumberASTNode) as any;
+  return<T>(element: T) {
+    return new ReturnASTNode(element);
   }
 
-  integer(opts: { min?: number; max?: number } = {}): Tag<IntegerASTNode, number> {
-    return ({
-      ...opts,
-      type: "integer" as "integer"
-    } as IntegerASTNode) as any;
+  number(min?: number, max?: number) {
+    return new NumberASTNode(min, max);
   }
 
-  float(opts: { min?: number; max?: number } = {}): Tag<FloatASTNode, number> {
-    return ({
-      ...opts,
-      type: "float" as "float"
-    } as FloatASTNode) as any;
+  integer(min?: number, max?: number) {
+    return new IntegerASTNode(min, max);
   }
 
-  boolean(): Tag<BooleanASTNode, boolean> {
-    return ({ type: "boolean" as "boolean" } as BooleanASTNode) as any;
+  float(min?: number, max?: number) {
+    return new FloatASTNode(min, max);
   }
 
-  string(opts: { max?: number } = {}): Tag<StringASTNode, string> {
-    return ({ ...opts, type: "string" as "string" } as StringASTNode) as any;
+  boolean() {
+    return new BooleanASTNode();
   }
 
-  uuid(): Tag<UuidASTNode, string> {
-    return ({ type: "uuid" as "uuid" } as UuidASTNode) as any;
+  string(max?: number) {
+    return new StringASTNode(max);
   }
 
-  any(): Tag<AnyASTNode, any> {
-    return ({ type: "any" as "any" } as AnyASTNode) as any;
+  uuid() {
+    return new UuidASTNode();
   }
 
-  array<T extends Tag<ASTNode>>(elements: T): Tag<ArrayASTNode<T>, GetTag<T>[]> {
-    return ({ elements, type: "array" as "array" } as ArrayASTNode<T>) as any;
+  any() {
+    return new AnyASTNode();
   }
 
-  tuple<T extends Tag<ASTNode>>(elements: [T]): Tag<TupleASTNode<[T]>, [GetTag<T>]>;
-  tuple<T extends Tag<ASTNode>, U extends Tag<ASTNode>>(
-    elements: [T, U]
-  ): Tag<TupleASTNode<[T, U]>, [GetTag<T>, GetTag<U>]>;
-  tuple<T extends Tag<ASTNode>, U extends Tag<ASTNode>, V extends Tag<ASTNode>>(
-    elements: [T, U, V]
-  ): Tag<TupleASTNode<[T, U, V]>, [GetTag<T>, GetTag<U>, GetTag<V>]>;
-  tuple<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W]
-  ): Tag<TupleASTNode<[T, U, V, W]>, [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>]>;
-  tuple<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X]
-  ): Tag<TupleASTNode<[T, U, V, W, X]>, [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>, GetTag<X>]>;
-  tuple<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>,
-    Y extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X, Y]
-  ): Tag<
-    TupleASTNode<[T, U, V, W, X, Y]>,
-    [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>, GetTag<X>, GetTag<Y>]
-  >;
-  tuple<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>,
-    Y extends Tag<ASTNode>,
-    Z extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X, Y, Z]
-  ): Tag<
-    TupleASTNode<[T, U, V, W, X, Y, Z]>,
-    [
-      GetTag<typeof elements[0]>,
-      GetTag<typeof elements[1]>,
-      GetTag<typeof elements[2]>,
-      GetTag<typeof elements[3]>,
-      GetTag<typeof elements[4]>,
-      GetTag<typeof elements[5]>,
-      GetTag<typeof elements[6]>
-    ]
-  >;
-  tuple(elements: Tag<ASTNode>[]): Tag<TupleASTNode<any>, any[]> {
-    return ({ elements, type: "tuple" as "tuple" } as TupleASTNode<any>) as any;
+  array<T>(elements: ASTNode<T>) {
+    return new ArrayASTNode(elements);
   }
 
-  oneOf<T extends Tag<ASTNode>>(elements: [T]): Tag<OneOfASTNode<[T]>, [GetTag<T>]>;
-  oneOf<T extends Tag<ASTNode>, U extends Tag<ASTNode>>(
-    elements: [T, U]
-  ): Tag<OneOfASTNode<[T, U]>, [GetTag<T>, GetTag<U>]>;
-  oneOf<T extends Tag<ASTNode>, U extends Tag<ASTNode>, V extends Tag<ASTNode>>(
-    elements: [T, U, V]
-  ): Tag<OneOfASTNode<[T, U, V]>, [GetTag<T>, GetTag<U>, GetTag<V>]>;
-  oneOf<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W]
-  ): Tag<OneOfASTNode<[T, U, V, W]>, [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>]>;
-  oneOf<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X]
-  ): Tag<OneOfASTNode<[T, U, V, W, X]>, [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>, GetTag<X>]>;
-  oneOf<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>,
-    Y extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X, Y]
-  ): Tag<
-    OneOfASTNode<[T, U, V, W, X, Y]>,
-    [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>, GetTag<X>, GetTag<Y>]
-  >;
-  oneOf<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>,
-    Y extends Tag<ASTNode>,
-    Z extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X, Y, Z]
-  ): Tag<
-    OneOfASTNode<[T, U, V, W, X, Y, Z]>,
-    [
-      GetTag<typeof elements[0]>,
-      GetTag<typeof elements[1]>,
-      GetTag<typeof elements[2]>,
-      GetTag<typeof elements[3]>,
-      GetTag<typeof elements[4]>,
-      GetTag<typeof elements[5]>,
-      GetTag<typeof elements[6]>
-    ]
-  >;
-  oneOf(elements: Tag<ASTNode>[]): Tag<OneOfASTNode<any>, any[]> {
-    return ({ elements, type: "oneOf" as "oneOf" } as OneOfASTNode<any>) as any;
+  tuple<T>(elements: ASTNode<T>[]) {
+    return new TupleASTNode(elements);
   }
 
-  spread<T extends Tag<ASTNode>>(elements: [T]): Tag<SpreadASTNode<[T]>, [GetTag<T>]>;
-  spread<T extends Tag<ASTNode>, U extends Tag<ASTNode>>(
-    elements: [T, U]
-  ): Tag<SpreadASTNode<[T, U]>, [GetTag<T>, GetTag<U>]>;
-  spread<T extends Tag<ASTNode>, U extends Tag<ASTNode>, V extends Tag<ASTNode>>(
-    elements: [T, U, V]
-  ): Tag<SpreadASTNode<[T, U, V]>, [GetTag<T>, GetTag<U>, GetTag<V>]>;
-  spread<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W]
-  ): Tag<SpreadASTNode<[T, U, V, W]>, [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>]>;
-  spread<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X]
-  ): Tag<SpreadASTNode<[T, U, V, W, X]>, [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>, GetTag<X>]>;
-  spread<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>,
-    Y extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X, Y]
-  ): Tag<
-    SpreadASTNode<[T, U, V, W, X, Y]>,
-    [GetTag<T>, GetTag<U>, GetTag<V>, GetTag<W>, GetTag<X>, GetTag<Y>]
-  >;
-  spread<
-    T extends Tag<ASTNode>,
-    U extends Tag<ASTNode>,
-    V extends Tag<ASTNode>,
-    W extends Tag<ASTNode>,
-    X extends Tag<ASTNode>,
-    Y extends Tag<ASTNode>,
-    Z extends Tag<ASTNode>
-  >(
-    elements: [T, U, V, W, X, Y, Z]
-  ): Tag<
-    SpreadASTNode<[T, U, V, W, X, Y, Z]>,
-    [
-      GetTag<typeof elements[0]>,
-      GetTag<typeof elements[1]>,
-      GetTag<typeof elements[2]>,
-      GetTag<typeof elements[3]>,
-      GetTag<typeof elements[4]>,
-      GetTag<typeof elements[5]>,
-      GetTag<typeof elements[6]>
-    ]
-  >;
-  spread(elements: Tag<ASTNode>[]): Tag<SpreadASTNode<any>, any[]> {
-    return ({ elements, type: "spread" as "spread" } as SpreadASTNode<any>) as any;
+  oneOf<T>(elements: ASTNode<T>[]) {
+    return new OneOfASTNode(elements);
   }
 
-  object<T extends { [key: string]: Tag<ASTNode> }>(
-    elements: T
-  ): Tag<ObjectASTNode<typeof elements>, { [K in keyof T]: GetTag<T[K]> }> {
-    return ({ elements, type: "object" as "object" } as ObjectASTNode<T>) as any;
+  spread<T>(elements: ASTNode<T>[]) {
+    return new SpreadASTNode(elements);
   }
 
-  return<T>(elements: T): Tag<ReturnASTNode<T>, T> {
-    return ({ elements, type: "return" as "return" } as ReturnASTNode<T>) as any;
-  }
-
-  toFuzzer<T>(node: Tag<ASTNode, T>): Fuzz<any, GetTag<typeof node>>;
-  toFuzzer(node: ASTNode): Fuzz<any, any> {
-    switch (node.type) {
-      case "number":
-        return fuzz.number();
-      case "integer":
-        return fuzz.integer();
-      case "float":
-        return fuzz.float();
-      case "boolean":
-        return fuzz.boolean();
-      case "string":
-        return fuzz.string();
-      case "uuid":
-        return fuzz.uuid();
-      case "any":
-        return fuzz.any();
-      case "array": {
-        const elements: Fuzz<any, any> = this.toFuzzer(node.elements);
-        return fuzz.array(elements);
-      }
-      case "tuple": {
-        const elements: Fuzz<any, any>[] = node.elements.map(this.toFuzzer);
-        return fuzz.tuple(elements);
-      }
-      case "object": {
-        const keys = Object.keys(node.elements);
-        const object = keys.reduce(
-          (acc, key) => {
-            acc[key] = this.toFuzzer(node.elements[key]);
-            return acc;
-          },
-          {} as any
-        );
-        return fuzz.object(object);
-      }
-      case "oneOf": {
-        const elements: Fuzz<any, any>[] = node.elements.map(this.toFuzzer);
-        return fuzz.oneOf(elements);
-      }
-      case "spread": {
-        const elements: [Fuzz<any, any>, Fuzz<any, any>] = node.elements.map(this.toFuzzer);
-        return fuzz.spread(elements);
-      }
-      case "return":
-        return fuzz.return(node.elements);
-      default:
-        return fuzz.undefined();
-    }
-  }
-
-  toString(node: ASTNode, apiName = "fuzz"): string {
-    switch (node.type) {
-      case "number":
-        return `${apiName}.number()`;
-      case "integer":
-        return `${apiName}.integer()`;
-      case "float":
-        return `${apiName}.float()`;
-      case "boolean":
-        return `${apiName}.boolean()`;
-      case "string":
-        return `${apiName}.string()`;
-      case "uuid":
-        return `${apiName}.uuid()`;
-      case "any":
-        return `${apiName}.any()`;
-      case "array": {
-        const elements = this.toString(node.elements, apiName);
-        return `${apiName}.array(${elements})`;
-      }
-      case "tuple": {
-        const elements = node.elements.map((e: any) => this.toString(e, apiName));
-        return `${apiName}.tuple([${elements.join(", ")}])`;
-      }
-      case "object": {
-        const keys = Object.keys(node.elements);
-        const strs = keys.reduce(
-          (acc, key) => {
-            return acc.concat(`"${key}": ${this.toString(node.elements[key], apiName)}`);
-          },
-          [] as string[]
-        );
-        const object = `{ ${strs.join(", ")} }`;
-
-        return `${apiName}.object(${object})`;
-      }
-      case "oneOf": {
-        const elements = node.elements.map((e: any) => this.toString(e, apiName));
-        return `${apiName}.oneOf([${elements.join(", ")}])`;
-      }
-      case "spread": {
-        const elements = node.elements.map((e: any) => this.toString(e, apiName));
-        return `${apiName}.spread([${elements.join(", ")}])`;
-      }
-      case "return":
-        return `${apiName}.return(${JSON.stringify(node.elements)})`;
-      default:
-        return `${apiName}.undefined()`;
-    }
+  object<T>(elements: { [K in keyof T]: ASTNode<T[K]> }) {
+    return new ObjectASTNode(elements);
   }
 }
 
