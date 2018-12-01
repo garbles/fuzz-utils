@@ -115,6 +115,31 @@ test("shrinks positive floats", () => {
   }
 });
 
+test("shrinks positive numbers", () => {
+  const [rose] = fuzz
+    .posNumber()
+    .toRandomRoseTree()
+    .sample({ maxSize: 1e3 });
+  const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
+
+  expect([...children].sort((a, b) => (a > b ? 1 : -1))).toEqual(children);
+
+  children.forEach(child => {
+    expect(child).toBeLessThan(value);
+  });
+
+  if (firstChild) {
+    expect(firstChild).toEqual(0);
+    expect(childrenOfChildren[1]).toEqual([]);
+  }
+
+  if (secondChild) {
+    childrenOfChildren[2].forEach(child => {
+      expect(child).toBeLessThan(secondChild);
+    });
+  }
+});
+
 test("shrinks negative integers", () => {
   const [rose] = fuzz
     .negInteger()
@@ -141,6 +166,29 @@ test("shrinks negative integers", () => {
 test("shrinks negative floats", () => {
   const [rose] = fuzz
     .negFloat()
+    .toRandomRoseTree()
+    .sample({ maxSize: 1e3 });
+  const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
+
+  children.forEach(child => {
+    expect(child).toBeGreaterThan(value);
+  });
+
+  if (firstChild) {
+    expect(firstChild).toEqual(-0);
+    expect(childrenOfChildren[1]).toEqual([]);
+  }
+
+  if (secondChild) {
+    childrenOfChildren[2].forEach(child => {
+      expect(child).toBeGreaterThan(secondChild);
+    });
+  }
+});
+
+test("shrinks negative numbers", () => {
+  const [rose] = fuzz
+    .negNumber()
     .toRandomRoseTree()
     .sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
@@ -224,6 +272,24 @@ test("shrinks floats within a range", () => {
 test("shrinks mixed integers", () => {
   const [rose] = fuzz
     .integer()
+    .toRandomRoseTree()
+    .sample({ maxSize: 1e3 });
+  const { value, children } = extract(rose);
+
+  if (value > 0) {
+    children.forEach(child => {
+      expect(child).toBeLessThan(value);
+    });
+  } else {
+    children.forEach(child => {
+      expect(child).toBeGreaterThanOrEqual(value);
+    });
+  }
+});
+
+test("shrinks mixed numbers", () => {
+  const [rose] = fuzz
+    .number()
     .toRandomRoseTree()
     .sample({ maxSize: 1e3 });
   const { value, children } = extract(rose);

@@ -494,7 +494,7 @@ class Api {
   }
 
   /**
-   * Creates a fuzzer that returns an float with some bounds. Does not bias
+   * Creates a fuzzer that returns a float with some bounds. Does not bias
    * the distribution of values.
    * @param minSize The minimum value
    * @param maxSize The maximum value
@@ -508,6 +508,40 @@ class Api {
         : minSize;
 
     return Fuzz.from(rand.floatWithin(minSize, maxSize), sh.atLeastFloat(pivot));
+  }
+
+  /**
+   * Creates a number fuzzer.
+   */
+  number(): Fuzz<number, number> {
+    return this.frequency([[3, this.integer()], [1, this.float()]]);
+  }
+
+  /**
+   * Creates a positive number fuzzer.
+   */
+  posNumber(): Fuzz<number, number> {
+    return this.frequency([[3, this.posInteger()], [1, this.posFloat()]]);
+  }
+
+  /**
+   * Creates a negative number fuzzer.
+   */
+  negNumber(): Fuzz<number, number> {
+    return this.frequency([[3, this.negInteger()], [1, this.negFloat()]]);
+  }
+
+  /**
+   * Creates a fuzzer that returns a number with some bounds. Does not bias
+   * the distribution of values.
+   * @param minSize The minimum value
+   * @param maxSize The maximum value
+   */
+  numberWith(minSize: number, maxSize: number): Fuzz<number, number> {
+    return this.frequency([
+      [3, this.integerWithin(Math.ceil(minSize), Math.floor(maxSize))],
+      [1, this.floatWithin(minSize, maxSize)]
+    ]);
   }
 
   /**
@@ -635,6 +669,11 @@ class Api {
     return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
   }
 
+  /**
+   * Does an Object spread over an array of fuzzer values. Same effect as
+   * something like, `{ ...objA, ...objB }`
+   * @param arr An array of fuzzers to spread over
+   */
   spread<A, B, C, D>(arr: [Fuzz<A, B>, Fuzz<C, D>]): Fuzz<[A, C], B & D>;
   spread<A, B, C, D, E, F>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>]): Fuzz<[A, C, E], B & D & F>;
   spread<A, B, C, D, E, F, G, H>(
