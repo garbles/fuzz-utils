@@ -635,7 +635,22 @@ class Api {
     return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
   }
 
-  // merge<T, U>(fuzzT: Fuzz<any, T>, fuzzU: Fuzz<any, U>): Fuzz<any, T & U> {
+  spread<A, B, C, D>(arr: [Fuzz<A, B>, Fuzz<C, D>]): Fuzz<[A, C], B & D>;
+  spread<A, B, C, D, E, F>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>]): Fuzz<[A, C, E], B & D & F>;
+  spread<A, B, C, D, E, F, G, H>(
+    arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>]
+  ): Fuzz<[A, C, E, G], B & D & F & H>;
+  spread<A, B, C, D, E, F, G, H, I, J>(
+    arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>, Fuzz<I, J>]
+  ): Fuzz<[A, C, E, G, I], B & D & F & H & J>;
+  spread<A, B, C, D, E, F, G, H, I, J, K, L>(
+    arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>, Fuzz<I, J>, Fuzz<K, L>]
+  ): Fuzz<[A, C, E, G, I, K], B & D & F & H & J & L>;
+  spread(arr: Fuzz<any, any>[]): Fuzz<any, any> {
+    return this.tuple(arr).map(values =>
+      values.reduce((acc, value) => Object.assign(acc, value), {})
+    );
+  }
 
   /**
    * Similar to array, but is a finite length of pre-defined fuzzers.

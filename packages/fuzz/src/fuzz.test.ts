@@ -710,3 +710,35 @@ test("merges two fuzzers together", () => {
   expect(typeof value[1]).toEqual("boolean");
   expect(value[2]).toEqual(12);
 });
+
+test("spreads many fuzzers together", () => {
+  const fuzzA = fuzz.object({
+    a: fuzz.integer(),
+    b: fuzz.boolean()
+  });
+
+  const fuzzB = fuzz.object({
+    c: fuzz.array(fuzz.float()),
+    d: fuzz.string()
+  });
+
+  const expectSpread = (obj: any) => {
+    expect(typeof obj.a).toEqual("number");
+    expect(typeof obj.b).toEqual("boolean");
+    expect(Array.isArray(obj.c)).toEqual(true);
+
+    if (obj.c.length > 0) {
+      expect(typeof obj.c[0]).toEqual("number");
+    }
+
+    expect(typeof obj.d).toEqual("string");
+  };
+
+  const fuzzer = fuzz.spread([fuzzA, fuzzB]);
+
+  let [rose] = fuzzer.toRandomRoseTree().sample();
+  let { value, children } = extract(rose);
+
+  expectSpread(value);
+  children.forEach(expectSpread);
+});
