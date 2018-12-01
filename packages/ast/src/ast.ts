@@ -3,9 +3,11 @@ import fuzz, { Fuzz } from "@fuzz-utils/fuzz";
 abstract class ASTNode<T> {
   abstract toFuzz(): Fuzz<any, T>;
   abstract toString(prefix: string): string;
+  abstract toJSON(): { type: string };
 }
 
 class NumberASTNode extends ASTNode<number> {
+  // TODO: Actually use these
   constructor(private min?: number, private max?: number) {
     super();
   }
@@ -16,6 +18,10 @@ class NumberASTNode extends ASTNode<number> {
 
   toString(prefix = "fuzz") {
     return `${prefix}.number()`;
+  }
+
+  toJSON() {
+    return { type: "number", min: this.min, max: this.max };
   }
 }
 
@@ -31,6 +37,10 @@ class IntegerASTNode extends ASTNode<number> {
   toString(prefix = "fuzz") {
     return `${prefix}.integer()`;
   }
+
+  toJSON() {
+    return { type: "integer", min: this.min, max: this.max };
+  }
 }
 
 class FloatASTNode extends ASTNode<number> {
@@ -44,6 +54,10 @@ class FloatASTNode extends ASTNode<number> {
 
   toString(prefix = "fuzz") {
     return `${prefix}.float()`;
+  }
+
+  toJSON() {
+    return { type: "float", min: this.min, max: this.max };
   }
 }
 
@@ -59,6 +73,10 @@ class BooleanASTNode extends ASTNode<boolean> {
   toString(prefix = "fuzz") {
     return `${prefix}.boolean()`;
   }
+
+  toJSON() {
+    return { type: "boolean" };
+  }
 }
 
 class StringASTNode extends ASTNode<string> {
@@ -72,6 +90,10 @@ class StringASTNode extends ASTNode<string> {
 
   toString(prefix = "fuzz") {
     return `${prefix}.string()`;
+  }
+
+  toJSON() {
+    return { type: "string", max: this.max };
   }
 }
 
@@ -87,6 +109,10 @@ class UuidASTNode extends ASTNode<string> {
   toString(prefix = "fuzz") {
     return `${prefix}.uuid()`;
   }
+
+  toJSON() {
+    return { type: "uuid" };
+  }
 }
 
 class AnyASTNode extends ASTNode<any> {
@@ -100,6 +126,10 @@ class AnyASTNode extends ASTNode<any> {
 
   toString(prefix = "fuzz") {
     return `${prefix}.any()`;
+  }
+
+  toJSON() {
+    return { type: "any" };
   }
 }
 
@@ -117,6 +147,11 @@ class ArrayASTNode<T> extends ASTNode<T[]> {
     const elements = this.elements.toString(prefix);
     return `${prefix}.array(${elements})`;
   }
+
+  toJSON() {
+    const elements = this.elements.toJSON();
+    return { type: "array", elements };
+  }
 }
 
 class TupleASTNode<T> extends ASTNode<T[]> {
@@ -133,6 +168,11 @@ class TupleASTNode<T> extends ASTNode<T[]> {
     const elements = this.elements.map(el => el.toString(prefix));
     return `${prefix}.tuple([${elements.join(", ")}])`;
   }
+
+  toJSON() {
+    const elements = this.elements.map(el => el.toJSON());
+    return { type: "tuple", elements };
+  }
 }
 
 class OneOfASTNode<T> extends ASTNode<T> {
@@ -148,6 +188,11 @@ class OneOfASTNode<T> extends ASTNode<T> {
   toString(prefix = "fuzz") {
     const elements = this.elements.map(el => el.toString(prefix));
     return `${prefix}.oneOf([${elements.join(", ")}])`;
+  }
+
+  toJSON() {
+    const elements = this.elements.map(el => el.toJSON());
+    return { type: "oneOf", elements };
   }
 }
 
@@ -166,6 +211,11 @@ class SpreadASTNode<T> extends ASTNode<T> {
     const elements = this.elements.map(el => el.toString(prefix));
     return `${prefix}.spread([${elements.join(", ")}])`;
   }
+
+  toJSON() {
+    const elements = this.elements.map(el => el.toJSON());
+    return { type: "spread", elements };
+  }
 }
 
 class ReturnASTNode<T> extends ASTNode<T> {
@@ -179,6 +229,11 @@ class ReturnASTNode<T> extends ASTNode<T> {
 
   toString(prefix = "fuzz") {
     return `${prefix}.return(${JSON.stringify(this.element)})`;
+  }
+
+  toJSON() {
+    const element = JSON.parse(JSON.stringify(this.element));
+    return { type: "return", element };
   }
 }
 
@@ -211,6 +266,19 @@ class ObjectASTNode<T> extends ASTNode<T> {
     );
 
     return `${prefix}.object({ ${result.join(", ")} })`;
+  }
+
+  toJSON() {
+    const keys = Object.keys(this.elements) as (keyof T)[];
+    const elements = keys.reduce(
+      (acc, key) => {
+        acc[key] = this.elements[key].toJSON();
+        return acc;
+      },
+      {} as { [K in keyof T]: { type: string } }
+    );
+
+    return { type: "object", elements };
   }
 }
 
@@ -269,3 +337,52 @@ class Api {
 }
 
 export default new Api();
+
+export const fromJSON = (json: any): ASTNode<any> => {
+  switch (json.type) {
+    case "number":
+      return new NumberASTNode(json.min, json.max);
+    case "integer":
+      return new IntegerASTNode(json.min, json.max);
+    case "float":
+      return new FloatASTNode(json.min, json.max);
+    case "boolean":
+      return new BooleanASTNode();
+    case "string":
+      return new StringASTNode(json.max);
+    case "uuid":
+      return new UuidASTNode();
+    case "any":
+      return new AnyASTNode();
+    case "array": {
+      const elements = fromJSON(json.elements);
+      return new ArrayASTNode(elements);
+    }
+    case "tuple": {
+      const elements = json.elements.map(fromJSON);
+      return new TupleASTNode(elements);
+    }
+    case "oneOf": {
+      const elements = json.elements.map(fromJSON);
+      return new OneOfASTNode(elements);
+    }
+    case "spread": {
+      const elements = json.elements.map(fromJSON);
+      return new SpreadASTNode(elements);
+    }
+    case "return":
+      return new ReturnASTNode(json.element);
+    case "object":
+      const keys = Object.keys(json.elements);
+      const elements = keys.reduce(
+        (acc, key) => {
+          acc[key] = fromJSON(json.elements[key]);
+          return acc;
+        },
+        {} as any
+      );
+      return new ObjectASTNode(elements);
+    default:
+      return new ReturnASTNode(undefined);
+  }
+};
