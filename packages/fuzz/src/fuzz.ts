@@ -537,7 +537,7 @@ class Api {
    * @param minSize The minimum value
    * @param maxSize The maximum value
    */
-  numberWith(minSize: number, maxSize: number): Fuzz<number, number> {
+  numberWithin(minSize: number, maxSize: number): Fuzz<number, number> {
     return this.frequency([
       [3, this.integerWithin(Math.ceil(minSize), Math.floor(maxSize))],
       [1, this.floatWithin(minSize, maxSize)]
