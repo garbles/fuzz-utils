@@ -53,11 +53,6 @@ class MaybeNode<T> extends ASTNode<T | undefined> {
 }
 
 class NumberNode extends ASTNode<number> {
-  // TODO: Actually use these
-  constructor(private min?: number, private max?: number) {
-    super();
-  }
-
   toFuzz() {
     return fuzz.number();
   }
@@ -67,15 +62,11 @@ class NumberNode extends ASTNode<number> {
   }
 
   toJSON() {
-    return { type: "number", min: this.min, max: this.max };
+    return { type: "number" };
   }
 }
 
 class IntegerNode extends ASTNode<number> {
-  constructor(private min?: number, private max?: number) {
-    super();
-  }
-
   toFuzz() {
     return fuzz.integer();
   }
@@ -85,15 +76,11 @@ class IntegerNode extends ASTNode<number> {
   }
 
   toJSON() {
-    return { type: "integer", min: this.min, max: this.max };
+    return { type: "integer" };
   }
 }
 
 class FloatNode extends ASTNode<number> {
-  constructor(private min?: number, private max?: number) {
-    super();
-  }
-
   toFuzz() {
     return fuzz.float();
   }
@@ -103,15 +90,11 @@ class FloatNode extends ASTNode<number> {
   }
 
   toJSON() {
-    return { type: "float", min: this.min, max: this.max };
+    return { type: "float" };
   }
 }
 
 class BooleanNode extends ASTNode<boolean> {
-  constructor() {
-    super();
-  }
-
   toFuzz() {
     return fuzz.boolean();
   }
@@ -126,10 +109,6 @@ class BooleanNode extends ASTNode<boolean> {
 }
 
 class StringNode extends ASTNode<string> {
-  constructor(private max?: number) {
-    super();
-  }
-
   toFuzz() {
     return fuzz.string();
   }
@@ -139,15 +118,11 @@ class StringNode extends ASTNode<string> {
   }
 
   toJSON() {
-    return { type: "string", max: this.max };
+    return { type: "string" };
   }
 }
 
 class UuidNode extends ASTNode<string> {
-  constructor() {
-    super();
-  }
-
   toFuzz() {
     return fuzz.uuid();
   }
@@ -162,10 +137,6 @@ class UuidNode extends ASTNode<string> {
 }
 
 class AnyNode extends ASTNode<any> {
-  constructor() {
-    super();
-  }
-
   toFuzz() {
     return fuzz.any();
   }
@@ -247,10 +218,9 @@ class SpreadNode<T> extends ASTNode<T> {
     super();
   }
 
-  // TODO: fix in random. Spread should be able to take 1 or 0 elements
   toFuzz() {
     const elements = this.elements.map(el => el.toFuzz());
-    return fuzz.spread(elements as any) as any;
+    return fuzz.spread(elements);
   }
 
   toString(prefix = "fuzz") {
@@ -332,24 +302,24 @@ class Api {
     return new ReturnNode(element);
   }
 
-  number(min?: number, max?: number) {
-    return new NumberNode(min, max);
+  number() {
+    return new NumberNode();
   }
 
-  integer(min?: number, max?: number) {
-    return new IntegerNode(min, max);
+  integer() {
+    return new IntegerNode();
   }
 
-  float(min?: number, max?: number) {
-    return new FloatNode(min, max);
+  float() {
+    return new FloatNode();
   }
 
   boolean() {
     return new BooleanNode();
   }
 
-  string(max?: number) {
-    return new StringNode(max);
+  string() {
+    return new StringNode();
   }
 
   uuid() {
@@ -394,15 +364,15 @@ export default new Api();
 export const fromJSON = (json: any): ASTNode<any> => {
   switch (json.type) {
     case "number":
-      return new NumberNode(json.min, json.max);
+      return new NumberNode();
     case "integer":
-      return new IntegerNode(json.min, json.max);
+      return new IntegerNode();
     case "float":
-      return new FloatNode(json.min, json.max);
+      return new FloatNode();
     case "boolean":
       return new BooleanNode();
     case "string":
-      return new StringNode(json.max);
+      return new StringNode();
     case "uuid":
       return new UuidNode();
     case "any":

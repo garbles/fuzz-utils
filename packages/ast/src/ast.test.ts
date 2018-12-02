@@ -7,7 +7,7 @@ test("creating a fuzzer is the same as evaluating it from a string", () => {
   const seed = Math.floor(Math.random() * 1e9);
 
   const result = ast.object([
-    ["a", ast.string(123)],
+    ["a", ast.string()],
     ["b", ast.array(ast.boolean())],
     ["c", ast.tuple([ast.object([["d", ast.float()]])])],
     ["d", ast.nullable(ast.string())],
