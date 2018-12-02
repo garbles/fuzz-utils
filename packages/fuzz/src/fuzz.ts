@@ -687,6 +687,7 @@ class Api {
   spread<A, B, C, D, E, F, G, H, I, J, K, L>(
     arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>, Fuzz<I, J>, Fuzz<K, L>]
   ): Fuzz<[A, C, E, G, I, K], B & D & F & H & J & L>;
+  spread<T>(arr: Fuzz<any, T>[]): Fuzz<any, T>;
   spread(arr: Fuzz<any, any>[]): Fuzz<any, any> {
     return this.tuple(arr).map(values =>
       values.reduce((acc, value) => Object.assign(acc, value), {})
