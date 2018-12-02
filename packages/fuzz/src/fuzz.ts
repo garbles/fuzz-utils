@@ -674,6 +674,8 @@ class Api {
    * something like, `{ ...objA, ...objB }`
    * @param arr An array of fuzzers to spread over
    */
+  spread(arr: []): Fuzz<{}, {}>;
+  spread<A, B>(arr: [Fuzz<A, B>]): Fuzz<[A], B>;
   spread<A, B, C, D>(arr: [Fuzz<A, B>, Fuzz<C, D>]): Fuzz<[A, C], B & D>;
   spread<A, B, C, D, E, F>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>]): Fuzz<[A, C, E], B & D & F>;
   spread<A, B, C, D, E, F, G, H>(

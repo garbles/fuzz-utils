@@ -808,3 +808,11 @@ test("spreads many fuzzers together", () => {
   expectSpread(value);
   children.forEach(expectSpread);
 });
+
+test("spreads no fuzzers together", () => {
+  const fuzzer = fuzz.spread([]);
+  let [rose] = fuzzer.toRandomRoseTree().sample();
+  let { value } = extract(rose);
+
+  expect(value).toEqual({});
+});
