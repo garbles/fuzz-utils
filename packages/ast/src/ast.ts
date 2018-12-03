@@ -2,7 +2,7 @@ import fuzz, { Fuzz } from "@fuzz-utils/fuzz";
 
 abstract class ASTNode<T> {
   abstract toFuzz(): Fuzz<any, T>;
-  abstract toString(prefix: string): string;
+  abstract toString(prefix?: string): string;
   abstract toJSON(): { type: string };
 
   nullable(): NullableNode<T> {
@@ -49,6 +49,26 @@ class MaybeNode<T> extends ASTNode<T | undefined> {
 
   toJSON() {
     return { type: "maybe", node: this.node.toJSON() };
+  }
+}
+
+class ReferenceNode extends ASTNode<Error> {
+  constructor(private name: string) {
+    super();
+  }
+
+  toFuzz() {
+    const err = new Error("Calling toFuzz on an object with a ReferenceNode is not allowed.");
+    throw err;
+    return fuzz.return(err);
+  }
+
+  toString(prefix = "fuzz") {
+    return this.name;
+  }
+
+  toJSON() {
+    return { type: "reference", name: this.name };
   }
 }
 
@@ -357,6 +377,10 @@ class Api {
   maybe<T>(node: ASTNode<T>) {
     return new MaybeNode(node);
   }
+
+  reference(name: string) {
+    return new ReferenceNode(name);
+  }
 }
 
 export default new Api();
@@ -413,6 +437,9 @@ export const fromJSON = (json: any): ASTNode<any> => {
     case "maybe": {
       const node = fromJSON(json.node);
       return new MaybeNode(node);
+    }
+    case "reference": {
+      return new ReferenceNode(json.name);
     }
     default:
       return new ReturnNode(undefined);
