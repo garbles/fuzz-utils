@@ -1,6 +1,6 @@
 import fuzz, { Fuzz } from "@fuzz-utils/fuzz";
 
-abstract class ASTNode<T> {
+export abstract class ASTNode<T> {
   abstract toFuzz(): Fuzz<any, T>;
   abstract toString(prefix?: string): string;
   abstract toJSON(): { type: string };

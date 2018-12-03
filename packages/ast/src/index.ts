@@ -1,1 +1,1 @@
-export { default } from "./ast";
+export { default, ASTNode } from "./ast";
