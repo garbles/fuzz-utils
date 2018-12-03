@@ -1,9 +1,29 @@
 import fuzz, { Fuzz } from "@fuzz-utils/fuzz";
 
+export type Context = {
+  withTypes: boolean;
+  prefix: string;
+  fuzzReturnType: string;
+  fuzzerType: string;
+};
+
+export const runtime = (context: Context): string => {
+  const { prefix, fuzzReturnType, fuzzerType } = context;
+  const defaultImportName = "__HIDEOUS_FUZZ_DEFAULT_IMPORT__";
+  const fuzzTypeImport = fuzzerType === "Fuzz" ? "Fuzz" : `Fuzz as ${fuzzerType}`;
+
+  return [
+    `import ${defaultImportName}, { ${fuzzTypeImport} } from '@fuzz-utils/fuzz';`,
+    `type ${fuzzReturnType}<T> = T extends ${fuzzerType}<any, infer U> ? U : never;`,
+    `const ${prefix} = ${defaultImportName};`
+  ].join("\n");
+};
+
 export abstract class ASTNode<T> {
   abstract toFuzz(): Fuzz<any, T>;
-  abstract toString(prefix?: string): string;
+  abstract toString(ctx: Context): string;
   abstract toJSON(): { type: string };
+  abstract toType(ctx: Context): string;
 
   nullable(): NullableNode<T> {
     return new NullableNode(this);
@@ -23,13 +43,18 @@ class NullableNode<T> extends ASTNode<T | null> {
     return this.node.toFuzz().nullable();
   }
 
-  toString(prefix = "fuzz") {
-    const node = this.node.toString(prefix);
+  toString(context: Context) {
+    const node = this.node.toString(context);
     return `${node}.nullable()`;
   }
 
   toJSON() {
     return { type: "nullable", node: this.node.toJSON() };
+  }
+
+  toType(context: Context) {
+    const type = this.node.toType(context);
+    return `(${type}) | null`;
   }
 }
 
@@ -42,13 +67,18 @@ class MaybeNode<T> extends ASTNode<T | undefined> {
     return this.node.toFuzz().maybe();
   }
 
-  toString(prefix = "fuzz") {
-    const node = this.node.toString(prefix);
+  toString(context: Context) {
+    const node = this.node.toString(context);
     return `${node}.maybe()`;
   }
 
   toJSON() {
     return { type: "maybe", node: this.node.toJSON() };
+  }
+
+  toType(context: Context) {
+    const type = this.node.toType(context);
+    return `(${type}) | undefined`;
   }
 }
 
@@ -63,12 +93,16 @@ class ReferenceNode extends ASTNode<Error> {
     return fuzz.return(err);
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.lazy(() => ${prefix}.from(${this.name}))`;
+  toString(context: Context) {
+    return `${context.prefix}.lazy(() => ${this.name})`;
   }
 
   toJSON() {
     return { type: "reference", name: this.name };
+  }
+
+  toType(context: Context) {
+    return `${context.fuzzReturnType}<${this.name}>`;
   }
 }
 
@@ -77,12 +111,16 @@ class NumberNode extends ASTNode<number> {
     return fuzz.number();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.number()`;
+  toString(context: Context) {
+    return `${context.prefix}.number()`;
   }
 
   toJSON() {
     return { type: "number" };
+  }
+
+  toType(context: Context) {
+    return "number";
   }
 }
 
@@ -91,12 +129,16 @@ class IntegerNode extends ASTNode<number> {
     return fuzz.integer();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.integer()`;
+  toString(context: Context) {
+    return `${context.prefix}.integer()`;
   }
 
   toJSON() {
     return { type: "integer" };
+  }
+
+  toType(context: Context) {
+    return "number";
   }
 }
 
@@ -105,12 +147,16 @@ class FloatNode extends ASTNode<number> {
     return fuzz.float();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.float()`;
+  toString(context: Context) {
+    return `${context.prefix}.float()`;
   }
 
   toJSON() {
     return { type: "float" };
+  }
+
+  toType(context: Context) {
+    return "number";
   }
 }
 
@@ -119,12 +165,16 @@ class BooleanNode extends ASTNode<boolean> {
     return fuzz.boolean();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.boolean()`;
+  toString(context: Context) {
+    return `${context.prefix}.boolean()`;
   }
 
   toJSON() {
     return { type: "boolean" };
+  }
+
+  toType(context: Context) {
+    return "boolean";
   }
 }
 
@@ -133,12 +183,16 @@ class StringNode extends ASTNode<string> {
     return fuzz.string();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.string()`;
+  toString(context: Context) {
+    return `${context.prefix}.string()`;
   }
 
   toJSON() {
     return { type: "string" };
+  }
+
+  toType(context: Context) {
+    return "string";
   }
 }
 
@@ -147,12 +201,16 @@ class UuidNode extends ASTNode<string> {
     return fuzz.uuid();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.uuid()`;
+  toString(context: Context) {
+    return `${context.prefix}.uuid()`;
   }
 
   toJSON() {
     return { type: "uuid" };
+  }
+
+  toType(context: Context) {
+    return "string";
   }
 }
 
@@ -161,12 +219,16 @@ class AnyNode extends ASTNode<any> {
     return fuzz.any();
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.any()`;
+  toString(context: Context) {
+    return `${context.prefix}.any()`;
   }
 
   toJSON() {
     return { type: "any" };
+  }
+
+  toType(context: Context) {
+    return "any";
   }
 }
 
@@ -180,14 +242,19 @@ class ArrayNode<T> extends ASTNode<T[]> {
     return fuzz.array(elements);
   }
 
-  toString(prefix = "fuzz") {
-    const elements = this.elements.toString(prefix);
-    return `${prefix}.array(${elements})`;
+  toString(context: Context) {
+    const { prefix, withTypes } = context;
+    const elements = this.elements.toString(context);
+    return `${prefix}.array${withTypes ? `<${this.elements.toType(context)}>` : ""}(${elements})`;
   }
 
   toJSON() {
     const elements = this.elements.toJSON();
     return { type: "array", elements };
+  }
+
+  toType(context: Context) {
+    return `(${this.elements.toType(context)})[]`;
   }
 }
 
@@ -201,14 +268,22 @@ class TupleNode<T> extends ASTNode<T[]> {
     return fuzz.tuple(elements);
   }
 
-  toString(prefix = "fuzz") {
-    const elements = this.elements.map(el => el.toString(prefix));
-    return `${prefix}.tuple([${elements.join(", ")}])`;
+  toString(context: Context) {
+    const { prefix, withTypes } = context;
+    const elements = this.elements.map(el => el.toString(context));
+    return `${prefix}.tuple${withTypes ? `<${this.toType(context)}>` : ""}([${elements.join(
+      ", "
+    )}])`;
   }
 
   toJSON() {
     const elements = this.elements.map(el => el.toJSON());
     return { type: "tuple", elements };
+  }
+
+  toType(context: Context) {
+    const elements = this.elements.map(el => el.toType(context));
+    return `[${elements.join(", ")}]`;
   }
 }
 
@@ -222,14 +297,19 @@ class OneOfNode<T> extends ASTNode<T> {
     return fuzz.oneOf(elements);
   }
 
-  toString(prefix = "fuzz") {
-    const elements = this.elements.map(el => el.toString(prefix));
-    return `${prefix}.oneOf([${elements.join(", ")}])`;
+  toString(context: Context) {
+    const elements = this.elements.map(el => el.toString(context));
+    return `${context.prefix}.oneOf([${elements.join(", ")}])`;
   }
 
   toJSON() {
     const elements = this.elements.map(el => el.toJSON());
     return { type: "oneOf", elements };
+  }
+
+  toType(context: Context) {
+    const elements = this.elements.map(el => el.toType(context));
+    return elements.join(" | ");
   }
 }
 
@@ -243,14 +323,21 @@ class SpreadNode<T> extends ASTNode<T> {
     return fuzz.spread(elements);
   }
 
-  toString(prefix = "fuzz") {
-    const elements = this.elements.map(el => el.toString(prefix));
-    return `${prefix}.spread([${elements.join(", ")}])`;
+  toString(context: Context) {
+    const { prefix, withTypes } = context;
+    const elements = this.elements.map(el => el.toString(context));
+    // prettier-ignore
+    return `${prefix}.spread${withTypes ? `<${this.toType(context)}>` : ""}([${elements.join(", ")}])`;
   }
 
   toJSON() {
     const elements = this.elements.map(el => el.toJSON());
     return { type: "spread", elements };
+  }
+
+  toType(context: Context) {
+    const elements = this.elements.map(el => el.toType(context));
+    return elements.join(" & ");
   }
 }
 
@@ -263,13 +350,17 @@ class ReturnNode<T> extends ASTNode<T> {
     return fuzz.return(this.element);
   }
 
-  toString(prefix = "fuzz") {
-    return `${prefix}.return(${JSON.stringify(this.element)})`;
+  toString(context: Context) {
+    return `${context.prefix}.return(${JSON.stringify(this.element)})`;
   }
 
   toJSON() {
     const element = JSON.parse(JSON.stringify(this.element));
     return { type: "return", element };
+  }
+
+  toType(context: Context) {
+    return JSON.stringify(this.element);
   }
 }
 
@@ -291,16 +382,18 @@ class ObjectNode<T> extends ASTNode<T> {
     return fuzz.object(result);
   }
 
-  toString(prefix = "fuzz") {
+  toString(context: Context) {
+    const { prefix, withTypes } = context;
     const result = this.elements.reduce(
       (acc, element) => {
         const [key, node] = element;
-        return acc.concat(`"${key}": ${node.toString(prefix)}`);
+        return acc.concat(`"${key}": ${node.toString(context)}`);
       },
       [] as string[]
     );
 
-    return `${prefix}.object({ ${result.join(", ")} })`;
+    // prettier-ignore
+    return `${prefix}.object${withTypes ? `<${this.toType(context)}>` : ""}({ ${result.join(", ")} })`;
   }
 
   toJSON() {
@@ -314,6 +407,18 @@ class ObjectNode<T> extends ASTNode<T> {
     );
 
     return { type: "object", elements };
+  }
+
+  toType(context: Context) {
+    const result = this.elements.reduce(
+      (acc, element) => {
+        const [key, node] = element;
+        return acc.concat(`"${key}": ${node.toType(context)}`);
+      },
+      [] as string[]
+    );
+
+    return `{ ${result.join(", ")} }`;
   }
 }
 
@@ -442,6 +547,6 @@ export const fromJSON = (json: any): ASTNode<any> => {
       return new ReferenceNode(json.name);
     }
     default:
-      return new ReturnNode(undefined);
+      return new ReturnNode("JSON SERIALIZER NOT IMPLEMENTED");
   }
 };
