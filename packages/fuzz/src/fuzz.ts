@@ -428,6 +428,14 @@ class Api {
     return Fuzz.from(rand.return(value), sh.noop());
   }
 
+  from<T>(value: T | Fuzz<any, T>): Fuzz<any, T> {
+    if (value instanceof Fuzz) {
+      return value;
+    }
+
+    return this.return(value);
+  }
+
   /**
    * Creates an integer fuzzer.
    */
