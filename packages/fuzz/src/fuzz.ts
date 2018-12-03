@@ -599,10 +599,7 @@ class Api {
    * @param fn Returns a fuzzer
    */
   lazy<T>(fn: () => Fuzz<any, T>): Fuzz<any, T> {
-    /**
-     * TODO: THIS is pretty lazy and probably slow. Fix?
-     */
-    return this.undefined().bind(fn);
+    return new Fuzz((size, seed) => fn().generator(size, seed));
   }
 
   /**
