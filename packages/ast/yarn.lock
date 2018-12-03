@@ -16,9 +16,9 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
-"@fuzz-utils/fuzz@^1.3.3":
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/@fuzz-utils/fuzz/-/fuzz-1.3.3.tgz#5fbefd2924d5b01f3c94f99a14a72c9749a97e77"
+"@fuzz-utils/fuzz@^1.3.4":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@fuzz-utils/fuzz/-/fuzz-1.3.4.tgz#70e7d252b8898b390811b51db6183f8ee4c8f923"
   dependencies:
     "@fuzz-utils/random" "^1.0.0"
     "@fuzz-utils/shrink" "^1.0.0"

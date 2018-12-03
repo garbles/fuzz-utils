@@ -35,5 +35,5 @@ test("grabs references", () => {
   const str2 = fromJSON(result.toJSON()).toString();
 
   expect(str1).toEqual(str2);
-  expect(str1).toEqual('fuzz.object({ "otherThing": OtherThing })');
+  expect(str1).toEqual('fuzz.object({ "otherThing": fuzz.lazy(() => fuzz.from(OtherThing)) })');
 });

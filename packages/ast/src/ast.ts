@@ -64,7 +64,7 @@ class ReferenceNode extends ASTNode<Error> {
   }
 
   toString(prefix = "fuzz") {
-    return this.name;
+    return `${prefix}.lazy(() => ${prefix}.from(${this.name}))`;
   }
 
   toJSON() {
