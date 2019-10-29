@@ -4,32 +4,15 @@ export type Seed = {
 };
 
 export type NextState<T> = [T, Seed];
-export type Generator<T> = (size: number, seed: Seed) => NextState<T>;
+export type RandomGenerator<T> = (size: number, seed: Seed) => NextState<T>;
 
 export type Props = {
   seed: number | Seed;
   maxSize: number;
 };
 
-type RejectToken = { "__@GARBLES/RANDOM__REJECT_TOKEN__": true };
-const REJECT: RejectToken = { "__@GARBLES/RANDOM__REJECT_TOKEN__": true };
-
-function* linearGrowth() {
-  let size = -1;
-
-  while (true) {
-    yield ++size;
-  }
-}
-
-function* fibonacciGrowth() {
-  let [n0, n1] = [0, 1];
-
-  while (true) {
-    yield n0;
-    [n0, n1] = [n1, n0 + n1];
-  }
-}
+type RejectToken = { "__@FUZZ_UTILS/RANDOM__REJECT_TOKEN__": true };
+const REJECT: RejectToken = { "__@FUZZ_UTILS/RANDOM__REJECT_TOKEN__": true };
 
 const empty = (obj: any) => !!obj === false || obj.length === 0;
 
@@ -116,7 +99,7 @@ const float = (min: number, max: number, seed: Seed): NextState<number> => {
   return [scaled, nextSeed(next)];
 };
 
-const boolean: Generator<boolean> = (size, seed) => {
+const boolean: RandomGenerator<boolean> = (size, seed) => {
   if (size === 0) {
     return [false, seed];
   }
@@ -125,7 +108,7 @@ const boolean: Generator<boolean> = (size, seed) => {
   return [num === 1, nextSeed];
 };
 
-const array = <T>(min: number, gen: Generator<T>): Generator<T[]> => {
+const array = <T>(min: number, gen: RandomGenerator<T>): RandomGenerator<T[]> => {
   return (size, seed) => {
     let i = -1;
     let xs: T[] = [];
@@ -142,12 +125,12 @@ const array = <T>(min: number, gen: Generator<T>): Generator<T[]> => {
   };
 };
 
-const constant = <T>(value: T): Generator<T> => (size, seed) => {
+const constant = <T>(value: T): RandomGenerator<T> => (size, seed) => {
   return [value, seed];
 };
 
-const frequency = <T>(contexts: [number, Generator<T>][]): Generator<T> => {
-  const arr: Generator<T>[] = [];
+const frequency = <T>(contexts: [number, RandomGenerator<T>][]): RandomGenerator<T> => {
+  const arr: RandomGenerator<T>[] = [];
 
   for (let context of contexts) {
     let [count, generator] = context;
@@ -174,7 +157,7 @@ export class Random<T> {
     return value;
   }
 
-  constructor(public readonly generator: Generator<T>) {
+  constructor(public readonly generator: RandomGenerator<T>) {
     Object.freeze(this);
   }
 
@@ -277,7 +260,7 @@ export class Random<T> {
     return new Random((size, seed) => this.generator(maxSize, seed));
   }
 
-  *toIterable(props: Partial<Props> = {}): Iterable<T> {
+  *toIterator(props: Partial<Props> = {}): Generator<T> {
     let { seed, maxSize } = props;
 
     while (true) {
@@ -391,7 +374,7 @@ export class RandomApi {
   }
 
   frequency<T>(contexts: [number, Random<T>][]): Random<T> {
-    const generators = contexts.map(c => [c[0], c[1].generator] as [number, Generator<T>]);
+    const generators = contexts.map(c => [c[0], c[1].generator] as [number, RandomGenerator<T>]);
     return new Random(frequency(generators));
   }
 

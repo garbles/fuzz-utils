@@ -1,10 +1,10 @@
 import rand from "./random";
 
-const take = <T>(iterable: Iterable<T>, total: number): T[] => {
+const take = <T>(gen: Generator<T>, total: number): T[] => {
   let result: T[] = Array(total);
   let i = 0;
 
-  for (let t of iterable) {
+  for (let t of gen) {
     result[i] = t;
     i++;
     if (i >= total) {
@@ -108,7 +108,7 @@ test("creates a list of integers where all numbers are greater than 5", () => {
 });
 
 test("create integers within a range", () => {
-  for (let value of take(rand.integerWithin(3, 7).toIterable(), 50)) {
+  for (let value of take(rand.integerWithin(3, 7).toIterator(), 50)) {
     expect(value).toBeGreaterThanOrEqual(3);
     expect(value).toBeLessThanOrEqual(7);
   }
@@ -196,7 +196,7 @@ test("does not adopt the binding of the other generator", () => {
         .resize(5)
         .noEmpty()
     )
-    .toIterable();
+    .toIterator();
 
   for (let arr of take(arrs, 50)) {
     expect(arr.length).toBeLessThanOrEqual(5);
@@ -382,7 +382,7 @@ test("creates a tuple from other generators", () => {
 });
 
 test("generates a list of values", () => {
-  const numbers = rand.integer().toIterable({ seed: 1e5 });
+  const numbers = rand.integer().toIterator({ seed: 1e5 });
 
   for (let n of take(numbers, 50)) {
     expect(typeof n).toEqual("number");
@@ -393,12 +393,12 @@ test("generates non empty values", () => {
   const numbers = rand
     .integer()
     .noEmpty()
-    .toIterable({ seed: 1e5 });
+    .toIterator({ seed: 1e5 });
 
   const array = rand
     .array(rand.integer())
     .noEmpty()
-    .toIterable({ seed: 1e5 });
+    .toIterator({ seed: 1e5 });
 
   for (let n of take(numbers, 50)) {
     expect(n).not.toEqual(0);
@@ -413,7 +413,7 @@ test("generates nullable values", () => {
   const numbers = rand
     .integer()
     .nullable(4)
-    .toIterable({ seed: Date.now() });
+    .toIterator({ seed: Date.now() });
   const expected = 1000 / 4;
 
   const nulls = take(numbers, 1000).filter(x => x === null).length;
@@ -426,7 +426,7 @@ test("generates maybe values", () => {
   const numbers = rand
     .integer()
     .maybe(5)
-    .toIterable({ seed: Date.now() });
+    .toIterator({ seed: Date.now() });
   const expected = 1000 / 5;
   const undef = take(numbers, 1000).filter(x => x === undefined).length;
 
@@ -439,7 +439,7 @@ test("resizes generators", () => {
     .posInteger()
     .resize(10)
     .map(i => i.toString())
-    .toIterable();
+    .toIterator();
 
   for (let str of take(strings, 50)) {
     expect(parseInt(str, 10)).toBeLessThanOrEqual(10);
@@ -496,7 +496,7 @@ test("generates uuids", () => {
 
 test("generates an unbiased integer within a range", () => {
   const count = 1e3;
-  const arr = take(rand.integerWithin(0, 4).toIterable(), count);
+  const arr = take(rand.integerWithin(0, 4).toIterator(), count);
 
   const results = arr.reduce(
     (acc, num) => {

@@ -11,11 +11,11 @@ type Results<T> = {
   };
 };
 
-const take = <T>(iterable: Iterable<T>, total: number): T[] => {
+const take = <T>(gen: Generator<T>, total: number): T[] => {
   let result: T[] = Array(total);
   let i = 0;
 
-  for (let t of iterable) {
+  for (let t of gen) {
     result[i] = t;
     i++;
     if (i >= total) {
@@ -554,7 +554,7 @@ test("generates maybe values", () => {
     .integer()
     .maybe(6)
     .toRandomRoseTree()
-    .toIterable({ seed: Date.now(), maxSize: 10 });
+    .toIterator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 6;
 
   const results = take(roses, 1e3).map(extract);
@@ -569,7 +569,7 @@ test("generates nullable values", () => {
     .integer()
     .nullable(4)
     .toRandomRoseTree()
-    .toIterable({ seed: Date.now(), maxSize: 10 });
+    .toIterator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 4;
 
   const results = take(roses, 1e3).map(extract);
@@ -585,7 +585,7 @@ test("can resize the fuzzer", () => {
     .map(i => i.toString())
     .resize(10)
     .toRandomRoseTree()
-    .toIterable({ maxSize: 1e4 });
+    .toIterator({ maxSize: 1e4 });
 
   for (let rose of take(roses, 1)) {
     expect(parseInt(rose.value(), 10)).toBeLessThanOrEqual(10);
@@ -624,7 +624,7 @@ test("creates a frequency fuzzer", () => {
     [3, fuzz.return("c")]
   ]);
 
-  const values = take(fuzzer.toRandomRoseTree().toIterable(), count).map(rose => rose.value());
+  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map(rose => rose.value());
 
   const expectedA = count / 9;
   const expectedB = (count * 5) / 9;
@@ -642,7 +642,7 @@ test("creates a frequency fuzzer", () => {
 test("generates an unbiased oneOf fuzzer", () => {
   const count = 1e3;
   const fuzzer = fuzz.oneOf([fuzz.return("a"), fuzz.return("b"), fuzz.return("c")]);
-  const values = take(fuzzer.toRandomRoseTree().toIterable(), count).map(rose => rose.value());
+  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map(rose => rose.value());
 
   const as = values.filter(v => v === "a").length;
   const bs = values.filter(v => v === "b").length;
@@ -657,7 +657,7 @@ describe("biases values toward extremes", () => {
   describe("numbers", () => {
     const checker = (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
       const fuzzer = fuzz.integer();
-      const values = take(fuzzer.toRandomRoseTree().toIterable({ maxSize }), count).map(rose =>
+      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map(rose =>
         rose.value()
       );
 
@@ -678,7 +678,7 @@ describe("biases values toward extremes", () => {
   describe("strings", () => {
     const checker = (maxSize: number, zeroProb: number, shortProb: number, longProb: number) => {
       const fuzzer = fuzz.string();
-      const values = take(fuzzer.toRandomRoseTree().toIterable({ maxSize }), count).map(rose =>
+      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map(rose =>
         rose.value()
       );
 
@@ -703,7 +703,7 @@ describe("biases values toward extremes", () => {
   describe("arrays", () => {
     const checker = (maxSize: number, zeroProb: number) => {
       const fuzzer = fuzz.array(fuzz.return(0));
-      const values = take(fuzzer.toRandomRoseTree().toIterable({ maxSize }), count).map(rose =>
+      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map(rose =>
         rose.value()
       );
 
