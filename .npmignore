@@ -3,3 +3,4 @@ src
 yarn-error.log
 yarn.lock
 tsconfig.json
+jest.config.js

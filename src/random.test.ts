@@ -294,7 +294,7 @@ test("skips n values from the same seed", () => {
 });
 
 test("memoizes the result so that they are not recomputed with the same seed", () => {
-  const mapper = jest.fn<number>(x => x + 1);
+  const mapper = jest.fn<number, [number]>(x => x + 1);
   const filterer = jest.fn(x => x !== 0);
   const int = rand
     .integer()
@@ -318,7 +318,7 @@ test("memoizes the result so that they are not recomputed with the same seed", (
 });
 
 test("keeps memoization even if chained again in a new context if the same seed is used", () => {
-  const mapper = jest.fn<number>(x => x + 1);
+  const mapper = jest.fn<number, [number]>(x => x + 1);
   const int = rand
     .integer()
     .map(mapper)
@@ -331,7 +331,7 @@ test("keeps memoization even if chained again in a new context if the same seed 
 });
 
 test("keeps memoization even if chained again in a new context unless a new seed is used", () => {
-  const mapper = jest.fn<number>(x => x + 1);
+  const mapper = jest.fn<number, [number]>(x => x + 1);
   const int = rand
     .integer()
     .map(mapper)
@@ -344,7 +344,7 @@ test("keeps memoization even if chained again in a new context unless a new seed
 });
 
 test("can turn off memoziation", () => {
-  const mapper = jest.fn<number>(x => x + 1);
+  const mapper = jest.fn<number, [number]>(x => x + 1);
   const filterer = jest.fn(x => x !== 0);
   const int = rand
     .integer()

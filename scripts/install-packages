@@ -1,4 +1,0 @@
-#!/usr/bin/env node
-
-const { runOnAll } = require("./util");
-runOnAll("rm -rf node_modules").then(() => runOnAll("yarn install"));

@@ -1,9 +1,12 @@
-import rand, { Random, Seed } from "@fuzz-utils/random";
-import sh, { Shrink } from "@fuzz-utils/shrink";
+import rand, { Random, Seed } from "./random";
+import sh, { Shrink } from "./shrink";
 
-type Filter = { __FILTER__: true };
+export type Filter = { __FILTER__: true };
 
-type Generator<T, U> = (size: number, seed: Seed) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
+export type RandomGenerator<T, U> = (
+  size: number,
+  seed: Seed
+) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
 
 const FILTER: Filter = { __FILTER__: true };
 
@@ -114,7 +117,7 @@ export class RoseTree<T, U> {
       const value = this.filterMap.apply(next);
 
       if (!isFilter(value)) {
-        yield new RoseTree([next, value], this.shrink, this.filterMap);
+        yield new RoseTree<T, U>([next, value], this.shrink, this.filterMap);
       }
     }
   }
@@ -245,7 +248,7 @@ export class Fuzz<T, U> {
     });
   }
 
-  constructor(public readonly generator: Generator<T, U>) {}
+  constructor(public readonly generator: RandomGenerator<T, U>) {}
 
   /**
    * Maps the inner value to a new value.
@@ -562,14 +565,14 @@ class Api {
   /**
    * Creates a fuzzer that always returns true.
    */
-  true(): Fuzz<boolean, boolean> {
+  true(): Fuzz<true, true> {
     return this.return(true);
   }
 
   /**
    * Creates a fuzzer that always returns false.
    */
-  false(): Fuzz<boolean, boolean> {
+  false(): Fuzz<false, false> {
     return this.return(false);
   }
 
