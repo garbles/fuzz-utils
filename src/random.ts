@@ -277,26 +277,6 @@ export class Random<T> {
     return new Random((size, seed) => this.generator(maxSize, seed));
   }
 
-  *toLinearGrowthIterable(props: Partial<Pick<Props, "seed">> = {}): Iterable<T> {
-    let { seed } = props;
-
-    for (let size of linearGrowth()) {
-      let next: T;
-      [next, seed] = this.sample({ seed, maxSize: size });
-      yield next;
-    }
-  }
-
-  *toFibonacciGrowthIterable(props: Partial<Pick<Props, "seed">> = {}): Iterable<T> {
-    let { seed } = props;
-
-    for (let size of fibonacciGrowth()) {
-      let next: T;
-      [next, seed] = this.sample({ seed, maxSize: size });
-      yield next;
-    }
-  }
-
   *toIterable(props: Partial<Props> = {}): Iterable<T> {
     let { seed, maxSize } = props;
 
@@ -316,7 +296,7 @@ export class Random<T> {
   }
 }
 
-class Api {
+export class RandomApi {
   return<T>(value: T): Random<T> {
     return new Random(constant(value));
   }
@@ -470,4 +450,4 @@ class Api {
   }
 }
 
-export default new Api();
+export default new RandomApi();

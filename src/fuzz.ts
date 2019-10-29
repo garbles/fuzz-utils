@@ -422,7 +422,7 @@ export class Fuzz<T, U> {
   }
 }
 
-class Api {
+export class FuzzApi {
   /**
    * Wraps a plain value in a fuzzer.
    * @param value Any value.
@@ -789,4 +789,4 @@ class Api {
   }
 }
 
-export default new Api();
+export default new FuzzApi();

@@ -251,7 +251,7 @@ export class Shrink<T, U = T> {
   }
 }
 
-class Api {
+export class ShrinkApi {
   noop<T>(): Shrink<T> {
     return new Shrink(value => []);
   }
@@ -344,4 +344,4 @@ class Api {
   }
 }
 
-export default new Api();
+export default new ShrinkApi();

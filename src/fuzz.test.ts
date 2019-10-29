@@ -616,31 +616,6 @@ test("creates a uuid", () => {
   expect(children).toEqual([]);
 });
 
-test("creates a growing rose tree of values where the first is always the empty tree", () => {
-  const fuzzer = fuzz.object({
-    name: fuzz.string(),
-    age: fuzz.posInteger().map(x => x + 5),
-    friends: fuzz.array(fuzz.string()),
-    tag: fuzz.string(),
-    other: fuzz.string()
-  });
-
-  const empty = {
-    name: "",
-    age: 5,
-    friends: [],
-    tag: "",
-    other: ""
-  };
-
-  const [rose] = take(fuzzer.toRandomRoseTree().toLinearGrowthIterable(), 1);
-  const { value, children } = extract(rose);
-
-  // the root value of the first rose tree has a to be the empty one
-  expect(value).toEqual(empty);
-  expect(children).toEqual([]);
-});
-
 test("creates a frequency fuzzer", () => {
   const count = 2e3;
   const fuzzer = fuzz.frequency([
