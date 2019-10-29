@@ -1,4 +1,4 @@
-Copyright 2018 (c) Gabe Scholz
+Copyright 2019 (c) Gabe Scholz
 
 # Mozilla Public License Version 2.0
 
