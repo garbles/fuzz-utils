@@ -157,9 +157,7 @@ export class Random<T> {
     return value;
   }
 
-  constructor(public readonly generator: RandomGenerator<T>) {
-    Object.freeze(this);
-  }
+  constructor(public readonly generator: RandomGenerator<T>) {}
 
   filter(fn: (t: T) => boolean, maxTries = 1e4): Random<T> {
     return new Random((size, seed) => {
