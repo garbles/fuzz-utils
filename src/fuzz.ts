@@ -1,5 +1,6 @@
-import rand, { Random, Seed } from "./random";
+import rand, { Random, Seed, RandomOptions } from "./random";
 import sh, { Shrink } from "./shrink";
+import { Runner } from "./runner";
 
 export type Filter = { __FILTER__: true };
 
@@ -419,6 +420,11 @@ export class Fuzz<T, U> {
 
       return [rose, seed3];
     });
+  }
+
+  run(cb: (u: U) => void, options: Partial<RandomOptions> = {}): void {
+    const runner = new Runner(this, options);
+    runner.exec(cb);
   }
 }
 

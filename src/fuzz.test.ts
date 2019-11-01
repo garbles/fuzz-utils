@@ -791,3 +791,19 @@ test("spreads no fuzzers together", () => {
 
   expect(value).toEqual({});
 });
+
+it("can map values to functions", () => {
+  const fuzzer = fuzz.string().map(u => () => u);
+  const randRoses = fuzzer.toRandomRoseTree();
+
+  const [rose] = randRoses.sample({ maxSize: 5 });
+  const { value, children } = extract(rose);
+
+  expect(typeof value).toBe("function");
+  expect(typeof value()).toBe("string");
+
+  children.forEach(child => {
+    expect(typeof child).toBe("function");
+    expect(typeof child()).toBe("string");
+  });
+});

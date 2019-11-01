@@ -6,7 +6,7 @@ export type Seed = {
 export type NextState<T> = [T, Seed];
 export type RandomGenerator<T> = (size: number, seed: Seed) => NextState<T>;
 
-export type Options = {
+export type RandomOptions = {
   seed: number | Seed;
   maxSize: number;
 };
@@ -260,7 +260,7 @@ export class Random<T> {
     return new Random((size, seed) => this.generator(maxSize, seed));
   }
 
-  *toIterator(options: Partial<Options> = {}): Generator<T> {
+  *toIterator(options: Partial<RandomOptions> = {}): Generator<T> {
     let { seed, maxSize } = options;
 
     while (true) {
@@ -270,7 +270,7 @@ export class Random<T> {
     }
   }
 
-  sample(options: Partial<Options> = {}): [T, Seed] {
+  sample(options: Partial<RandomOptions> = {}): [T, Seed] {
     let { seed = Date.now(), maxSize = 100 } = options;
     let seed_ = isSeed(seed) ? seed : initialSeed(seed);
     const [value, nextSeed] = this.generator(maxSize, seed_);
