@@ -9,5 +9,6 @@
     "sourceMap": true,
     "declaration": true,
     "downlevelIteration": true
-  }
+  },
+  "include": ["src"]
 }
