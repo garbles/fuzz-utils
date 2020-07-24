@@ -1,1 +1,1 @@
-export { default as shrink } from "./build/shrink";
+export { default as shrink, Shrink } from "./build/shrink";

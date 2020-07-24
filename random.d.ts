@@ -1,1 +1,1 @@
-export { default as random } from "./build/random";
+export { default as random, Random } from "./build/random";

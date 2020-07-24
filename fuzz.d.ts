@@ -1,1 +1,1 @@
-export { default as fuzz } from "./build/fuzz";
+export { default as fuzz, Fuzz } from "./build/fuzz";
