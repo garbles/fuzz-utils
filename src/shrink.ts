@@ -5,7 +5,7 @@ const take = <T>(arr: T[], count: number): T[] => arr.slice(0, count);
 const drop = <T>(arr: T[], count: number): T[] => arr.slice(count, arr.length);
 const empty = (obj: any) => !!obj === false || obj.length === 0;
 
-const integerSeries: NumberSeriesFunction = function*(low, high, xs = []) {
+const integerSeries: NumberSeriesFunction = function* (low, high, xs = []) {
   if (low >= high) {
     return;
   }
@@ -21,7 +21,7 @@ const integerSeries: NumberSeriesFunction = function*(low, high, xs = []) {
   yield* integerSeries(next, high, xs);
 };
 
-const floatSeries: NumberSeriesFunction = function*(low, high) {
+const floatSeries: NumberSeriesFunction = function* (low, high) {
   if (low === high) {
     return;
   }
@@ -41,7 +41,7 @@ const floatSeries: NumberSeriesFunction = function*(low, high) {
 };
 
 const numberHelper = (makeSeries: NumberSeriesFunction) => (pivot: number): Generator<number> =>
-  function*(num) {
+  function* (num) {
     if (pivot === 0 && num === 0) {
       return;
     }
@@ -144,7 +144,7 @@ function* arrayRemove<T>(t: T[]) {
 }
 
 const array = <T>(generator: Generator<T>): Generator<T[]> =>
-  function*(value: T[]) {
+  function* (value: T[]) {
     if (value.length === 0) {
       return;
     }
@@ -164,7 +164,7 @@ export class Shrink<T, U = T> {
   filter(fn: (t: U) => boolean): Shrink<T, U> {
     const generator = this.generator;
 
-    return new Shrink(function*(value) {
+    return new Shrink(function* (value) {
       const arr: Iterable<U> = generator(value);
 
       for (let next of arr) {
@@ -178,7 +178,7 @@ export class Shrink<T, U = T> {
   map<V>(fn: (u: U) => V): Shrink<T, V> {
     const generator = this.generator;
 
-    return new Shrink(function*(value) {
+    return new Shrink(function* (value) {
       const arr: Iterable<U> = generator(value);
 
       for (let next of arr) {
@@ -188,12 +188,12 @@ export class Shrink<T, U = T> {
   }
 
   noShrink(): Shrink<T> {
-    return new Shrink(value => []);
+    return new Shrink((value) => []);
   }
 
   noEmpty(): Shrink<T, U> {
     const generator = this.generator;
-    return new Shrink(function*(value) {
+    return new Shrink(function* (value) {
       for (let u of generator(value)) {
         if (!empty(u)) {
           yield u;
@@ -204,7 +204,7 @@ export class Shrink<T, U = T> {
 
   maybe(): Shrink<T | undefined, U | undefined> {
     const generator = this.generator;
-    return new Shrink(function*(value) {
+    return new Shrink(function* (value) {
       // short circuit because undefined can't be shrunk
       if (value === undefined) {
         return;
@@ -218,7 +218,7 @@ export class Shrink<T, U = T> {
 
   nullable(): Shrink<T | null, U | null> {
     const generator = this.generator;
-    return new Shrink(function*(value) {
+    return new Shrink(function* (value) {
       // short circuit because null can't be shrunk
       if (value === null) {
         return;
@@ -233,7 +233,7 @@ export class Shrink<T, U = T> {
   convert<V>(vToT: (v: V) => T, uToV: (u: U) => V): Shrink<V> {
     const generator = this.generator;
 
-    return new Shrink(function*(value) {
+    return new Shrink(function* (value) {
       const t = vToT(value);
 
       for (let u of generator(t)) {
@@ -253,7 +253,7 @@ export class Shrink<T, U = T> {
 
 export class ShrinkApi {
   noop<T>(): Shrink<T> {
-    return new Shrink(value => []);
+    return new Shrink((value) => []);
   }
 
   integer(): Shrink<number> {
@@ -265,7 +265,7 @@ export class ShrinkApi {
   }
 
   atLeastInteger(pivot: number): Shrink<number> {
-    return new Shrink(integer(pivot)).filter(x => {
+    return new Shrink(integer(pivot)).filter((x) => {
       if (pivot > 0) {
         return x >= pivot;
       } else if (pivot < 0) {
@@ -285,7 +285,7 @@ export class ShrinkApi {
   }
 
   atLeastFloat(pivot: number): Shrink<number> {
-    return new Shrink(float(pivot)).filter(x => {
+    return new Shrink(float(pivot)).filter((x) => {
       if (pivot > 0) {
         return x >= pivot;
       } else if (pivot < 0) {
@@ -306,13 +306,16 @@ export class ShrinkApi {
 
   character(): Shrink<string> {
     return this.atLeastInteger(32).convert(
-      str => str.charCodeAt(0),
-      num => String.fromCharCode(num)
+      (str) => str.charCodeAt(0),
+      (num) => String.fromCharCode(num)
     );
   }
 
   string(): Shrink<string> {
-    return this.array(this.character()).convert(str => str.split(""), arr => arr.join(""));
+    return this.array(this.character()).convert(
+      (str) => str.split(""),
+      (arr) => arr.join("")
+    );
   }
 
   tuple<U>(arr: [Shrink<U>]): Shrink<[U]>;
@@ -327,19 +330,19 @@ export class ShrinkApi {
   ): Shrink<[U, V, W, X, Y, Z]>;
   tuple<T>(arr: Shrink<T>[]): Shrink<T[]>;
   tuple(arr: Shrink<any>[]): Shrink<any> {
-    return new Shrink(function*(value) {
-      const generators = arr.map(shrink => shrink.generator);
+    return new Shrink(function* (value) {
+      const generators = arr.map((shrink) => shrink.generator);
       yield* tupleShrinkOne(generators, value);
     });
   }
 
   object<T>(obj: { [K in keyof T]: Shrink<T[K]> }): Shrink<T> {
     const keys = Object.keys(obj) as (keyof T)[];
-    const shrinkers = keys.map(key => obj[key]);
+    const shrinkers = keys.map((key) => obj[key]);
 
     return this.tuple(shrinkers).convert(
-      obj => keys.map(key => obj[key]),
-      values => keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T)
+      (obj) => keys.map((key) => obj[key]),
+      (values) => keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T)
     );
   }
 }

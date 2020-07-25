@@ -13,7 +13,7 @@ it("shrinks integers", () => {
 
   expect(result).toHaveLength(count);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(r).toBeGreaterThanOrEqual(0);
     expect(r).toBeLessThan(num);
   });
@@ -22,7 +22,7 @@ it("shrinks integers", () => {
 it("shrinks integers toward a pivot", () => {
   const result = shrink.towardInteger(-50).value(-500);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(r).toBeGreaterThan(-500);
     expect(r).toBeLessThanOrEqual(-50);
   });
@@ -57,7 +57,7 @@ it("shrinks the float pivot", () => {
 it("shrinks floats", () => {
   const result = shrink.float().value(500);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(r).toBeGreaterThanOrEqual(0);
     expect(r).toBeLessThan(500);
   });
@@ -79,10 +79,10 @@ it("shrinks empty strings", () => {
 it("maps values to other types", () => {
   const result = shrink
     .integer()
-    .map(n => String.fromCharCode(n) + String.fromCharCode(n))
+    .map((n) => String.fromCharCode(n) + String.fromCharCode(n))
     .value(500);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(typeof r).toEqual("string");
     expect(r).toHaveLength(2);
   });
@@ -91,21 +91,18 @@ it("maps values to other types", () => {
 it("filters values that do not meet some criteria", () => {
   const result = shrink
     .integer()
-    .filter(n => n > 300)
-    .filter(n => n < 450)
+    .filter((n) => n > 300)
+    .filter((n) => n < 450)
     .value(500);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(r).toBeGreaterThan(300);
     expect(r).toBeLessThan(450);
   });
 });
 
 it("can avoid shrinking", () => {
-  const result = shrink
-    .integer()
-    .noShrink()
-    .value(120);
+  const result = shrink.integer().noShrink().value(120);
 
   expect(result).toEqual([]);
 });
@@ -115,7 +112,7 @@ it("with still shrink other values", () => {
     .tuple([shrink.string(), shrink.integer().noShrink()])
     .value(["hello!", 123]);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(r[0]).not.toEqual("hello!");
     expect(r[1]).toEqual(123);
   });
@@ -124,11 +121,11 @@ it("with still shrink other values", () => {
 it("creates arrays of shrunken values", () => {
   const result = shrink.array(shrink.integer()).value([1, 2, 3, 4, 5]);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(r.length).toBeGreaterThanOrEqual(0);
     expect(r.length).toBeLessThanOrEqual(5);
 
-    r.forEach(rr => {
+    r.forEach((rr) => {
       expect(rr).toBeLessThanOrEqual(5);
       expect(rr).toBeGreaterThanOrEqual(0);
     });
@@ -151,7 +148,7 @@ it("shrinks objects with base values for keys", () => {
 it("shrinks tuples", () => {
   const result = shrink.tuple([shrink.integer(), shrink.boolean()]).value([200, true]);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(typeof r[0]).toEqual("number");
     expect(r[0]).toBeLessThanOrEqual(200);
     expect(typeof r[1]).toEqual("boolean");
@@ -168,11 +165,11 @@ it("shrinks objects", () => {
     .object({
       name: shrink.string(),
       age: shrink.atLeastInteger(18),
-      isCool: shrink.boolean()
+      isCool: shrink.boolean(),
     })
     .value({ name: "Gabe", age: 40, isCool: true });
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(typeof r.name).toEqual("string");
     expect(typeof r.age).toEqual("number");
     expect(r.age).toBeGreaterThanOrEqual(18);
@@ -189,7 +186,7 @@ it("shrinks strings", () => {
   const start = "hello world!";
   const result = shrink.string().value(start);
 
-  result.forEach(r => {
+  result.forEach((r) => {
     expect(typeof r).toEqual("string");
     expect(r.length).toBeLessThanOrEqual(start.length);
   });
@@ -217,9 +214,9 @@ it("removes empty values", () => {
   expect(boolean.value(true)).toContain(false);
   expect(nonEmptyBoolean.value(true)).toEqual([]);
 
-  expect(array.value([1, 2, 3, 4, 5]).some(arr => arr.length === 0)).toBe(true);
-  expect(nonEmptyArray.value([1, 2, 3, 4, 5]).some(arr => arr.length === 0)).toBe(false);
-  expect(arrayofNonEmptyIntegers.value([1, 2, 3, 4, 5]).every(arr => arr.indexOf(0) === -1)).toBe(
+  expect(array.value([1, 2, 3, 4, 5]).some((arr) => arr.length === 0)).toBe(true);
+  expect(nonEmptyArray.value([1, 2, 3, 4, 5]).some((arr) => arr.length === 0)).toBe(false);
+  expect(arrayofNonEmptyIntegers.value([1, 2, 3, 4, 5]).every((arr) => arr.indexOf(0) === -1)).toBe(
     true
   );
   expect(nonEmptyArray.value([])).toEqual([]);

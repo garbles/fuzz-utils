@@ -48,19 +48,16 @@ export class Runner<T, U> {
         args,
         run() {
           return cb.call(null, args);
-        }
+        },
       };
     };
 
-    const iter = this.fuzzer
-      .map(toTestRun)
-      .toRandomRoseTree()
-      .toIterator(this.options);
+    const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toIterator(this.options);
 
     const report: Report<U> = {
       success: [],
       failure: [],
-      completed: false
+      completed: false,
     };
 
     for await (let event of this.toEventIterator(iter, 0)) {
@@ -99,8 +96,8 @@ export class Runner<T, U> {
           type: "success",
           data: {
             args: test.args,
-            depth
-          }
+            depth,
+          },
         };
 
         yield event;
@@ -110,8 +107,8 @@ export class Runner<T, U> {
           data: {
             args: test.args,
             depth,
-            error
-          }
+            error,
+          },
         };
 
         yield event;
@@ -123,7 +120,7 @@ export class Runner<T, U> {
     }
 
     const complete: CompleteEvent = {
-      type: "complete"
+      type: "complete",
     };
 
     yield complete;

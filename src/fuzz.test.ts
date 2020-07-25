@@ -50,13 +50,13 @@ const extract = <T>(rose: RoseTree<any, T>): Results<T> => {
 
   return {
     value: rose.value(),
-    children: children.map(r => r.value()),
+    children: children.map((r) => r.value()),
     firstChild: children[0] ? children[0].value() : undefined,
     secondChild: children[1] ? children[1].value() : undefined,
     childrenOfChildren: {
-      1: childrenOfFirstChild.map(r => r.value()),
-      2: childrenOfSecondChild.map(r => r.value())
-    }
+      1: childrenOfFirstChild.map((r) => r.value()),
+      2: childrenOfSecondChild.map((r) => r.value()),
+    },
   };
 };
 
@@ -66,15 +66,12 @@ const expectWithin25Percent = (value: number, expected: number) => {
 };
 
 test("shrinks positive integers", () => {
-  const [rose] = fuzz
-    .posInteger()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.posInteger().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect([...children].sort((a, b) => (a > b ? 1 : -1))).toEqual(children);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeLessThan(value);
   });
 
@@ -84,22 +81,19 @@ test("shrinks positive integers", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeLessThan(secondChild);
     });
   }
 });
 
 test("shrinks positive floats", () => {
-  const [rose] = fuzz
-    .posFloat()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.posFloat().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect([...children].sort((a, b) => (a > b ? 1 : -1))).toEqual(children);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeLessThan(value);
   });
 
@@ -109,22 +103,19 @@ test("shrinks positive floats", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeLessThan(secondChild);
     });
   }
 });
 
 test("shrinks positive numbers", () => {
-  const [rose] = fuzz
-    .posNumber()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.posNumber().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect([...children].sort((a, b) => (a > b ? 1 : -1))).toEqual(children);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeLessThan(value);
   });
 
@@ -134,20 +125,17 @@ test("shrinks positive numbers", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeLessThan(secondChild);
     });
   }
 });
 
 test("shrinks negative integers", () => {
-  const [rose] = fuzz
-    .negInteger()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.negInteger().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeGreaterThan(value);
   });
 
@@ -157,20 +145,17 @@ test("shrinks negative integers", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeGreaterThan(secondChild);
     });
   }
 });
 
 test("shrinks negative floats", () => {
-  const [rose] = fuzz
-    .negFloat()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.negFloat().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeGreaterThan(value);
   });
 
@@ -180,20 +165,17 @@ test("shrinks negative floats", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeGreaterThan(secondChild);
     });
   }
 });
 
 test("shrinks negative numbers", () => {
-  const [rose] = fuzz
-    .negNumber()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.negNumber().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeGreaterThan(value);
   });
 
@@ -203,23 +185,20 @@ test("shrinks negative numbers", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeGreaterThan(secondChild);
     });
   }
 });
 
 test("shrinks integers within a range", () => {
-  const [rose] = fuzz
-    .integerWithin(3, 30)
-    .toRandomRoseTree()
-    .sample();
+  const [rose] = fuzz.integerWithin(3, 30).toRandomRoseTree().sample();
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect(value).toBeGreaterThanOrEqual(3);
   expect(value).toBeLessThanOrEqual(30);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeLessThan(value);
     expect(child).toBeGreaterThanOrEqual(3);
     expect(child).toBeLessThanOrEqual(30);
@@ -231,7 +210,7 @@ test("shrinks integers within a range", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeLessThan(secondChild);
       expect(child).toBeGreaterThanOrEqual(3);
       expect(child).toBeLessThanOrEqual(30);
@@ -240,16 +219,13 @@ test("shrinks integers within a range", () => {
 });
 
 test("shrinks floats within a range", () => {
-  const [rose] = fuzz
-    .floatWithin(3.5, 30)
-    .toRandomRoseTree()
-    .sample();
+  const [rose] = fuzz.floatWithin(3.5, 30).toRandomRoseTree().sample();
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect(value).toBeGreaterThanOrEqual(3.5);
   expect(value).toBeLessThanOrEqual(30);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeLessThan(value);
     expect(child).toBeGreaterThanOrEqual(3.5);
     expect(child).toBeLessThanOrEqual(30);
@@ -261,7 +237,7 @@ test("shrinks floats within a range", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeLessThan(secondChild);
       expect(child).toBeGreaterThanOrEqual(3.5);
       expect(child).toBeLessThanOrEqual(30);
@@ -270,46 +246,37 @@ test("shrinks floats within a range", () => {
 });
 
 test("shrinks mixed integers", () => {
-  const [rose] = fuzz
-    .integer()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.integer().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children } = extract(rose);
 
   if (value > 0) {
-    children.forEach(child => {
+    children.forEach((child) => {
       expect(child).toBeLessThan(value);
     });
   } else {
-    children.forEach(child => {
+    children.forEach((child) => {
       expect(child).toBeGreaterThanOrEqual(value);
     });
   }
 });
 
 test("shrinks mixed numbers", () => {
-  const [rose] = fuzz
-    .number()
-    .toRandomRoseTree()
-    .sample({ maxSize: 1e3 });
+  const [rose] = fuzz.number().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children } = extract(rose);
 
   if (value > 0) {
-    children.forEach(child => {
+    children.forEach((child) => {
       expect(child).toBeLessThan(value);
     });
   } else {
-    children.forEach(child => {
+    children.forEach((child) => {
       expect(child).toBeGreaterThanOrEqual(value);
     });
   }
 });
 
 test("shrinks booleans", () => {
-  const [rose] = fuzz
-    .boolean()
-    .toRandomRoseTree()
-    .sample();
+  const [rose] = fuzz.boolean().toRandomRoseTree().sample();
 
   const { value, children, childrenOfChildren } = extract(rose);
 
@@ -322,13 +289,10 @@ test("shrinks booleans", () => {
 });
 
 test("shrinks strings", () => {
-  const [rose] = fuzz
-    .string()
-    .toRandomRoseTree()
-    .sample({ maxSize: 10 });
+  const [rose] = fuzz.string().toRandomRoseTree().sample({ maxSize: 10 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).not.toEqual(value);
     expect(child.length).toBeLessThanOrEqual(value.length);
   });
@@ -339,7 +303,7 @@ test("shrinks strings", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).not.toEqual(secondChild);
       expect(child.length).toBeLessThanOrEqual(secondChild!.length);
     });
@@ -347,13 +311,10 @@ test("shrinks strings", () => {
 });
 
 test("shrinks characters", () => {
-  const [rose] = fuzz
-    .character()
-    .toRandomRoseTree()
-    .sample();
+  const [rose] = fuzz.character().toRandomRoseTree().sample();
   const { value, children, firstChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child.charCodeAt(0)).toBeLessThan(value.charCodeAt(0));
     expect(child).toHaveLength(1);
   });
@@ -365,13 +326,10 @@ test("shrinks characters", () => {
 });
 
 test("shrinks arrays of things", () => {
-  const [rose] = fuzz
-    .array(fuzz.integer())
-    .toRandomRoseTree()
-    .sample({ maxSize: 20 });
+  const [rose] = fuzz.array(fuzz.integer()).toRandomRoseTree().sample({ maxSize: 20 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).not.toEqual(value);
     expect(child.length).toBeLessThanOrEqual(value.length);
   });
@@ -382,7 +340,7 @@ test("shrinks arrays of things", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).not.toEqual(secondChild);
       expect(child.length).toBeLessThanOrEqual(secondChild!.length);
     });
@@ -396,13 +354,13 @@ test("shrinks tuples", () => {
     .sample({ maxSize: 10 });
   const { value, children, secondChild, childrenOfChildren } = extract(rose);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).not.toEqual(value);
     expect(child.length).toEqual(value.length);
   });
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).not.toEqual(secondChild);
       expect(child.length).toBeLessThanOrEqual(secondChild.length);
     });
@@ -415,7 +373,7 @@ test("shrinks objects", () => {
       name: fuzz.string().resize(10),
       age: fuzz.posInteger().resize(100),
       tag: fuzz.return("constant"),
-      other: "plain"
+      other: "plain",
     })
     .toRandomRoseTree()
     .sample();
@@ -434,14 +392,14 @@ test("shrinks objects", () => {
 
   expectIsPerson(value);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expectIsPerson(child);
     expect(child.age).toBeLessThanOrEqual(value.age);
     expect(child.name.length).toBeLessThanOrEqual(value.name.length);
   });
 
   if (firstChild) {
-    childrenOfChildren[1].forEach(child => {
+    childrenOfChildren[1].forEach((child) => {
       expectIsPerson(child);
       expect(child.age).toBeLessThanOrEqual(firstChild.age);
       expect(child.name.length).toBeLessThanOrEqual(firstChild.name.length);
@@ -449,7 +407,7 @@ test("shrinks objects", () => {
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expectIsPerson(child);
       expect(child.age).toBeLessThanOrEqual(secondChild.age);
       expect(child.name.length).toBeLessThanOrEqual(secondChild.name.length);
@@ -461,14 +419,14 @@ test("filters out unwanted values", () => {
   const [rose] = fuzz
     .integer()
     .resize(1e4)
-    .suchThat(x => x > 200)
+    .suchThat((x) => x > 200)
     .toRandomRoseTree()
     .sample();
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect(value).toBeGreaterThan(200);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).toBeLessThan(value);
   });
 
@@ -479,13 +437,13 @@ test("filters out unwanted values", () => {
   expect(firstChild).toBeGreaterThan(200);
 
   if (firstChild) {
-    childrenOfChildren[1].forEach(child => {
+    childrenOfChildren[1].forEach((child) => {
       expect(child).toBeLessThan(firstChild);
     });
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).toBeLessThan(secondChild);
     });
   }
@@ -494,7 +452,7 @@ test("filters out unwanted values", () => {
 test("maps values", () => {
   const seed = Date.now();
   const pre = fuzz.integer();
-  const post = pre.map(x => Math.abs(x));
+  const post = pre.map((x) => Math.abs(x));
 
   const { value: preValue, children: preChildren } = extract(
     pre.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]
@@ -510,40 +468,36 @@ test("maps values", () => {
 test("binds to new fuzzers", () => {
   const [rose] = fuzz
     .posInteger()
-    .bind(x => fuzz.string().resize(x))
+    .bind((x) => fuzz.string().resize(x))
     .toRandomRoseTree()
     .sample({ maxSize: 40 });
   const { value, children } = extract(rose);
 
   expect(typeof value).toEqual("string");
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(typeof child).toEqual("string");
   });
 });
 
 test("does not include empty values", () => {
-  const [rose] = fuzz
-    .integer()
-    .noEmpty()
-    .toRandomRoseTree()
-    .sample({ maxSize: 10 });
+  const [rose] = fuzz.integer().noEmpty().toRandomRoseTree().sample({ maxSize: 10 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
   expect(value).not.toEqual(0);
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(child).not.toEqual(0);
   });
 
   if (firstChild) {
-    childrenOfChildren[1].forEach(child => {
+    childrenOfChildren[1].forEach((child) => {
       expect(child).not.toEqual(0);
     });
   }
 
   if (secondChild) {
-    childrenOfChildren[2].forEach(child => {
+    childrenOfChildren[2].forEach((child) => {
       expect(child).not.toEqual(0);
     });
   }
@@ -558,7 +512,7 @@ test("generates maybe values", () => {
   const expected = 1e3 / 6;
 
   const results = take(roses, 1e3).map(extract);
-  const undef = results.filter(r => r.value === undefined).length;
+  const undef = results.filter((r) => r.value === undefined).length;
 
   expect(undef).toBeGreaterThan(expected * 0.8);
   expect(undef).toBeLessThan(expected * 1.2);
@@ -573,7 +527,7 @@ test("generates nullable values", () => {
   const expected = 1e3 / 4;
 
   const results = take(roses, 1e3).map(extract);
-  const nulls = results.filter(r => r.value === null).length;
+  const nulls = results.filter((r) => r.value === null).length;
 
   expect(nulls).toBeGreaterThan(expected * 0.8);
   expect(nulls).toBeLessThan(expected * 1.2);
@@ -582,7 +536,7 @@ test("generates nullable values", () => {
 test("can resize the fuzzer", () => {
   const roses = fuzz
     .posInteger()
-    .map(i => i.toString())
+    .map((i) => i.toString())
     .resize(10)
     .toRandomRoseTree()
     .toIterator({ maxSize: 1e4 });
@@ -593,10 +547,7 @@ test("can resize the fuzzer", () => {
 });
 
 test("create a constant value", () => {
-  const [rose] = fuzz
-    .return(1234)
-    .toRandomRoseTree()
-    .sample();
+  const [rose] = fuzz.return(1234).toRandomRoseTree().sample();
   const { value, children } = extract(rose);
 
   expect(value).toEqual(1234);
@@ -604,10 +555,7 @@ test("create a constant value", () => {
 });
 
 test("creates a uuid", () => {
-  const [rose] = fuzz
-    .uuid()
-    .toRandomRoseTree()
-    .sample();
+  const [rose] = fuzz.uuid().toRandomRoseTree().sample();
   const { value, children } = extract(rose);
 
   // test is tests in @garbles/random
@@ -621,18 +569,18 @@ test("creates a frequency fuzzer", () => {
   const fuzzer = fuzz.frequency([
     [1, fuzz.return("a")],
     [5, fuzz.return("b")],
-    [3, fuzz.return("c")]
+    [3, fuzz.return("c")],
   ]);
 
-  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map(rose => rose.value());
+  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map((rose) => rose.value());
 
   const expectedA = count / 9;
   const expectedB = (count * 5) / 9;
   const expectedC = (count * 3) / 9;
 
-  const as = values.filter(v => v === "a").length;
-  const bs = values.filter(v => v === "b").length;
-  const cs = values.filter(v => v === "c").length;
+  const as = values.filter((v) => v === "a").length;
+  const bs = values.filter((v) => v === "b").length;
+  const cs = values.filter((v) => v === "c").length;
 
   expectWithin25Percent(as, expectedA);
   expectWithin25Percent(bs, expectedB);
@@ -642,13 +590,13 @@ test("creates a frequency fuzzer", () => {
 test("generates an unbiased oneOf fuzzer", () => {
   const count = 1e3;
   const fuzzer = fuzz.oneOf([fuzz.return("a"), fuzz.return("b"), fuzz.return("c")]);
-  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map(rose => rose.value());
+  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map((rose) => rose.value());
 
-  const as = values.filter(v => v === "a").length;
-  const bs = values.filter(v => v === "b").length;
-  const cs = values.filter(v => v === "c").length;
+  const as = values.filter((v) => v === "a").length;
+  const bs = values.filter((v) => v === "b").length;
+  const cs = values.filter((v) => v === "c").length;
 
-  [as, bs, cs].forEach(num => expectWithin25Percent(num, count / 3));
+  [as, bs, cs].forEach((num) => expectWithin25Percent(num, count / 3));
 });
 
 describe("biases values toward extremes", () => {
@@ -657,13 +605,13 @@ describe("biases values toward extremes", () => {
   describe("numbers", () => {
     const checker = (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
       const fuzzer = fuzz.integer();
-      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map(rose =>
+      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map((rose) =>
         rose.value()
       );
 
-      const zeros = values.filter(v => v === 0).length;
-      const min = values.filter(v => v === -maxSize).length;
-      const max = values.filter(v => v === maxSize).length;
+      const zeros = values.filter((v) => v === 0).length;
+      const min = values.filter((v) => v === -maxSize).length;
+      const max = values.filter((v) => v === maxSize).length;
 
       expectWithin25Percent(zeros, count * zeroProb);
       expectWithin25Percent(min, count * minProb);
@@ -678,13 +626,13 @@ describe("biases values toward extremes", () => {
   describe("strings", () => {
     const checker = (maxSize: number, zeroProb: number, shortProb: number, longProb: number) => {
       const fuzzer = fuzz.string();
-      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map(rose =>
+      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map((rose) =>
         rose.value()
       );
 
-      const zeros = values.filter(v => v.length === 0).length;
-      const shorts = values.filter(v => v.length <= 10 && v.length > 0).length;
-      const longs = values.filter(v => v.length > 50).length;
+      const zeros = values.filter((v) => v.length === 0).length;
+      const shorts = values.filter((v) => v.length <= 10 && v.length > 0).length;
+      const longs = values.filter((v) => v.length > 50).length;
 
       expectWithin25Percent(zeros, count * zeroProb);
       expectWithin25Percent(shorts, count * shortProb);
@@ -703,11 +651,11 @@ describe("biases values toward extremes", () => {
   describe("arrays", () => {
     const checker = (maxSize: number, zeroProb: number) => {
       const fuzzer = fuzz.array(fuzz.return(0));
-      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map(rose =>
+      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map((rose) =>
         rose.value()
       );
 
-      const zeros = values.filter(v => v.length === 0).length;
+      const zeros = values.filter((v) => v.length === 0).length;
       expectWithin25Percent(zeros, count * zeroProb);
     };
 
@@ -755,12 +703,12 @@ test("merges two fuzzers together", () => {
 test("spreads many fuzzers together", () => {
   const fuzzA = fuzz.object({
     a: fuzz.integer(),
-    b: fuzz.boolean()
+    b: fuzz.boolean(),
   });
 
   const fuzzB = fuzz.object({
     c: fuzz.array(fuzz.float()),
-    d: fuzz.string()
+    d: fuzz.string(),
   });
 
   const expectSpread = (obj: any) => {
@@ -793,7 +741,7 @@ test("spreads no fuzzers together", () => {
 });
 
 it("can map values to functions", () => {
-  const fuzzer = fuzz.string().map(u => () => u);
+  const fuzzer = fuzz.string().map((u) => () => u);
   const randRoses = fuzzer.toRandomRoseTree();
 
   const [rose] = randRoses.sample({ maxSize: 5 });
@@ -802,7 +750,7 @@ it("can map values to functions", () => {
   expect(typeof value).toBe("function");
   expect(typeof value()).toBe("string");
 
-  children.forEach(child => {
+  children.forEach((child) => {
     expect(typeof child).toBe("function");
     expect(typeof child()).toBe("string");
   });

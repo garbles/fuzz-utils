@@ -69,31 +69,19 @@ const biasedRandomString = (): Random<string> =>
       if (size <= 10) {
         gens.push([8, rand.string().noEmpty()]);
       } else if (size <= 50) {
-        gens.push([
-          5,
-          rand
-            .string()
-            .resize(10)
-            .noEmpty()
-        ]);
-        gens.push([3, rand.string().filter(s => s.length > 10)]);
+        gens.push([5, rand.string().resize(10).noEmpty()]);
+        gens.push([3, rand.string().filter((s) => s.length > 10)]);
       } else {
         // size > 50
-        gens.push([
-          5,
-          rand
-            .string()
-            .resize(10)
-            .noEmpty()
-        ]);
+        gens.push([5, rand.string().resize(10).noEmpty()]);
         gens.push([
           2,
           rand
             .string()
             .resize(50)
-            .filter(s => s.length > 10)
+            .filter((s) => s.length > 10),
         ]);
-        gens.push([1, rand.string().filter(s => s.length > 50)]);
+        gens.push([1, rand.string().filter((s) => s.length > 50)]);
       }
     }
 
@@ -148,7 +136,7 @@ class FilterMap<T, U> {
   ): FilterMap<[A, C, E, G, I, K], [B, D, F, H, J, L]>;
   static tuple<T, U>(arr: FilterMap<T, U>[]): FilterMap<T[], U[]>;
   static tuple(filterMaps: FilterMap<any, any>[]): FilterMap<any, any> {
-    return new FilterMap(values => {
+    return new FilterMap((values) => {
       const results: any[] = Array(values.length);
 
       for (let i = 0; i < values.length; i++) {
@@ -172,7 +160,7 @@ class FilterMap<T, U> {
   static object<T>(obj: { [K in keyof T]: FilterMap<any, T[K]> }): FilterMap<any, T> {
     const keys = Object.keys(obj) as (keyof T)[];
 
-    return new FilterMap(value => {
+    return new FilterMap((value) => {
       const results = {} as T;
 
       for (let key of keys) {
@@ -192,7 +180,7 @@ class FilterMap<T, U> {
   constructor(public apply: (t: T) => U | Filter) {}
 
   filter(fn: (u: U) => boolean): FilterMap<T, U> {
-    return new FilterMap(value => {
+    return new FilterMap((value) => {
       const result = this.apply(value);
 
       if (isFilter(result) || fn(result) !== true) {
@@ -204,7 +192,7 @@ class FilterMap<T, U> {
   }
 
   map<V>(fn: (u: U) => V): FilterMap<T, V> {
-    return new FilterMap(value => {
+    return new FilterMap((value) => {
       const result = this.apply(value);
 
       if (isFilter(result)) {
@@ -216,21 +204,21 @@ class FilterMap<T, U> {
   }
 
   toArray(): FilterMap<T[], U[]> {
-    return new FilterMap(value => {
-      const result = value.map(v => this.apply(v));
+    return new FilterMap((value) => {
+      const result = value.map((v) => this.apply(v));
       return result.reduce((acc, u) => (isFilter(u) ? acc : acc.concat(u)), [] as U[]);
     });
   }
 
   maybe(): FilterMap<T | undefined, U | undefined> {
-    return new FilterMap(value => {
+    return new FilterMap((value) => {
       // TODO: unclear why we can't return this.apply(value)
       return value === undefined ? undefined : (this.apply(value) as any);
     });
   }
 
   nullable(): FilterMap<T | null, U | null> {
-    return new FilterMap(value => {
+    return new FilterMap((value) => {
       // TODO: unclear why we can't return this.apply(value)
       return value === null ? null : (this.apply(value) as any);
     });
@@ -244,7 +232,7 @@ export class Fuzz<T, U> {
 
   static from<T>(random: Random<T>, shrink: Shrink<T>): Fuzz<T, T> {
     return new Fuzz((size, seed) => {
-      const filterMap = new FilterMap<T, T>(x => x);
+      const filterMap = new FilterMap<T, T>((x) => x);
       return [random, shrink, seed, filterMap];
     });
   }
@@ -276,7 +264,7 @@ export class Fuzz<T, U> {
       const nextRandom = rand.tuple([randomT, randomV]);
       const nextShrink = sh.tuple([shrinkT, shrinkV]);
 
-      const nextFilterMap: FilterMap<[T, V], X> = new FilterMap(value => {
+      const nextFilterMap: FilterMap<[T, V], X> = new FilterMap((value) => {
         const [t, v] = value;
         const u = filterMapT.apply(t);
         const w = filterMapV.apply(v);
@@ -531,21 +519,30 @@ export class FuzzApi {
    * Creates a number fuzzer.
    */
   number(): Fuzz<number, number> {
-    return this.frequency([[3, this.integer()], [1, this.float()]]);
+    return this.frequency([
+      [3, this.integer()],
+      [1, this.float()],
+    ]);
   }
 
   /**
    * Creates a positive number fuzzer.
    */
   posNumber(): Fuzz<number, number> {
-    return this.frequency([[3, this.posInteger()], [1, this.posFloat()]]);
+    return this.frequency([
+      [3, this.posInteger()],
+      [1, this.posFloat()],
+    ]);
   }
 
   /**
    * Creates a negative number fuzzer.
    */
   negNumber(): Fuzz<number, number> {
-    return this.frequency([[3, this.negInteger()], [1, this.negFloat()]]);
+    return this.frequency([
+      [3, this.negInteger()],
+      [1, this.negFloat()],
+    ]);
   }
 
   /**
@@ -557,7 +554,7 @@ export class FuzzApi {
   numberWithin(minSize: number, maxSize: number): Fuzz<number, number> {
     return this.frequency([
       [3, this.integerWithin(Math.ceil(minSize), Math.floor(maxSize))],
-      [1, this.floatWithin(minSize, maxSize)]
+      [1, this.floatWithin(minSize, maxSize)],
     ]);
   }
 
@@ -637,7 +634,7 @@ export class FuzzApi {
       this.uuid(),
       this.array(this.lazy(this.any)),
       this.null(),
-      this.undefined()
+      this.undefined(),
     ]);
   }
 
@@ -650,7 +647,7 @@ export class FuzzApi {
 
     return new Fuzz((size, seed) => {
       const [random, shrink, seed2, filterMap] = fuzz.generator(size, seed);
-      const nextRandom = biasedLength.bind(maxLength => rand.array(random).resize(maxLength));
+      const nextRandom = biasedLength.bind((maxLength) => rand.array(random).resize(maxLength));
       const nextShrink = sh.array(shrink);
 
       return [nextRandom, nextShrink, seed2, filterMap.toArray()];
@@ -672,7 +669,7 @@ export class FuzzApi {
       }
     }
 
-    return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
+    return this.integerWithin(0, arr.length - 1).bind((n) => arr[n]);
   }
 
   /**
@@ -680,7 +677,7 @@ export class FuzzApi {
    * @param arr An array of fuzzers to be sampled from
    */
   oneOf<T, U>(arr: Fuzz<T, U>[]): Fuzz<T, U> {
-    return this.integerWithin(0, arr.length - 1).bind(n => arr[n]);
+    return this.integerWithin(0, arr.length - 1).bind((n) => arr[n]);
   }
 
   /**
@@ -703,7 +700,7 @@ export class FuzzApi {
   ): Fuzz<[A, C, E, G, I, K], B & D & F & H & J & L>;
   spread<T>(arr: Fuzz<any, T>[]): Fuzz<any, T>;
   spread(arr: Fuzz<any, any>[]): Fuzz<any, any> {
-    return this.tuple(arr).map(values =>
+    return this.tuple(arr).map((values) =>
       values.reduce((acc, value) => Object.assign(acc, value), {})
     );
   }
@@ -759,16 +756,13 @@ export class FuzzApi {
    */
   object<T>(obj: { [K in keyof T]: T[K] | Fuzz<any, T[K]> }): Fuzz<any, T> {
     const keys = Object.keys(obj) as (keyof T)[];
-    const fuzzers = keys.reduce(
-      (acc, key) => {
-        const value: T[keyof T] | Fuzz<any, T[keyof T]> = obj[key];
-        const fuzzer: Fuzz<any, T[keyof T]> = Fuzz.is(value) ? value : this.return(value);
+    const fuzzers = keys.reduce((acc, key) => {
+      const value: T[keyof T] | Fuzz<any, T[keyof T]> = obj[key];
+      const fuzzer: Fuzz<any, T[keyof T]> = Fuzz.is(value) ? value : this.return(value);
 
-        acc[key] = fuzzer;
-        return acc;
-      },
-      {} as { [K in keyof T]: Fuzz<any, T[K]> }
-    );
+      acc[key] = fuzzer;
+      return acc;
+    }, {} as { [K in keyof T]: Fuzz<any, T[K]> });
 
     return new Fuzz((size, seed) => {
       const randoms = {} as { [K in keyof T]: Random<T[K]> };

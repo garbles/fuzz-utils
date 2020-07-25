@@ -188,7 +188,7 @@ export class Random<T> {
   }
 
   filterMap<U>(fn: (t: T, r: RejectToken) => U | RejectToken): Random<U> {
-    return this.map(v => fn(v, REJECT)).filter(v => v !== REJECT) as Random<U>;
+    return this.map((v) => fn(v, REJECT)).filter((v) => v !== REJECT) as Random<U>;
   }
 
   bind<U>(fn: (t: T) => Random<U>): Random<U> {
@@ -245,12 +245,18 @@ export class Random<T> {
   }
 
   maybe(n = 4): Random<T | undefined> {
-    const generator = frequency([[n - 1, this.generator], [1, constant(undefined)]]);
+    const generator = frequency([
+      [n - 1, this.generator],
+      [1, constant(undefined)],
+    ]);
     return new Random(generator);
   }
 
   nullable(n = 4): Random<T | null> {
-    const generator = frequency([[n - 1, this.generator], [1, constant(null)]]);
+    const generator = frequency([
+      [n - 1, this.generator],
+      [1, constant(null)],
+    ]);
     return new Random(generator);
   }
 
@@ -325,7 +331,7 @@ export class RandomApi {
   }
 
   character(): Random<string> {
-    return new Random((size, seed) => integer(32, 126, seed)).map(i => String.fromCharCode(i));
+    return new Random((size, seed) => integer(32, 126, seed)).map((i) => String.fromCharCode(i));
   }
 
   whitespace(): Random<string> {
@@ -333,7 +339,7 @@ export class RandomApi {
   }
 
   string(): Random<string> {
-    return this.array(this.character()).map(arr => arr.join(""));
+    return this.array(this.character()).map((arr) => arr.join(""));
   }
 
   byte(): Random<number> {
@@ -345,7 +351,7 @@ export class RandomApi {
 
     return new Random((size, seed) => {
       const [bytes, nextSeed] = bytesGen(seed);
-      const strs = bytes.map(b => ("0" + b.toString(16)).slice(-2));
+      const strs = bytes.map((b) => ("0" + b.toString(16)).slice(-2));
 
       // prettier-ignore
       const value = (
@@ -372,16 +378,16 @@ export class RandomApi {
   }
 
   frequency<T>(contexts: [number, Random<T>][]): Random<T> {
-    const generators = contexts.map(c => [c[0], c[1].generator] as [number, RandomGenerator<T>]);
+    const generators = contexts.map((c) => [c[0], c[1].generator] as [number, RandomGenerator<T>]);
     return new Random(frequency(generators));
   }
 
   oneOf<T>(sample: (T | Random<T>)[]): Random<T> {
-    const arr = sample.map(v => Random.return(v));
+    const arr = sample.map((v) => Random.return(v));
 
     return this.posInteger()
       .resize(arr.length - 1)
-      .bind(i => arr[i]);
+      .bind((i) => arr[i]);
   }
 
   tuple<U>(sample: [U | Random<U>]): Random<[U]>;
@@ -405,7 +411,7 @@ export class RandomApi {
   ): Random<[U, V, W, X, Y, Z]>;
   tuple<U>(sample: (U | Random<U>)[]): Random<U[]>;
   tuple(sample: (any | Random<any>)[]): Random<any[]> {
-    const arr = sample.map(v => Random.return(v));
+    const arr = sample.map((v) => Random.return(v));
 
     return new Random((size, seed) => {
       const value: any[] = [];
@@ -423,11 +429,15 @@ export class RandomApi {
 
   object<T>(obj: { [K in keyof T]: T[K] | Random<T[K]> }): Random<T> {
     const keys = Object.keys(obj) as (keyof T)[];
-    const rands = keys.map(k => Random.return(obj[k])) as Random<T[keyof T]>[];
+    const rands = keys.map((k) => Random.return(obj[k])) as Random<T[keyof T]>[];
 
-    return this.tuple(rands).map(values =>
+    return this.tuple(rands).map((values) =>
       keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T)
     );
+  }
+
+  lazy<T>(fn: () => Random<T>) {
+    return this.return(undefined).bind(fn);
   }
 }
 
