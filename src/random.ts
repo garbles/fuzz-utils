@@ -245,16 +245,20 @@ export class Random<T> {
   }
 
   maybe(n = 4): Random<T | undefined> {
+    const nn = n < 1 ? 1 : n;
+
     const generator = frequency([
-      [n - 1, this.generator],
+      [nn - 1, this.generator],
       [1, constant(undefined)],
     ]);
     return new Random(generator);
   }
 
   nullable(n = 4): Random<T | null> {
+    const nn = n < 1 ? 1 : n;
+
     const generator = frequency([
-      [n - 1, this.generator],
+      [nn - 1, this.generator],
       [1, constant(null)],
     ]);
     return new Random(generator);
@@ -438,6 +442,40 @@ export class RandomApi {
 
   lazy<T>(fn: () => Random<T>) {
     return this.return(undefined).bind(fn);
+  }
+
+  deref<T, U>(rands: [Random<T>], fn: (t: () => T) => U): Random<U>;
+  deref<T, U, V>(rands: [Random<T>, Random<U>], fn: (t: () => T, u: () => U) => V): Random<V>;
+  deref<T, U, V, W>(
+    rands: [Random<T>, Random<U>, Random<V>],
+    fn: (t: () => T, u: () => U, v: () => V) => W
+  ): Random<W>;
+  deref<T, U, V, W, X>(
+    rands: [Random<T>, Random<U>, Random<V>, Random<W>],
+    fn: (t: () => T, u: () => U, v: () => V, w: () => W) => X
+  ): Random<X>;
+  deref<T, U, V, W, X, Y>(
+    rands: [Random<T>, Random<U>, Random<V>, Random<W>, Random<X>],
+    fn: (t: () => T, u: () => U, v: () => V, w: () => W, x: () => X) => Y
+  ): Random<Y>;
+  deref<T, U, V, W, X, Y, Z>(
+    rands: [Random<T>, Random<U>, Random<V>, Random<W>, Random<X>, Random<Y>],
+    fn: (t: () => T, u: () => U, v: () => V, w: () => W, x: () => X, y: () => Y) => Z
+  ): Random<Z>;
+  deref(rands: Random<any>[], fn: (...args: (() => any)[]) => any): Random<any> {
+    return new Random((size, seed) => {
+      let nextSeed = seed;
+
+      const fns = rands.map((rand) => () => {
+        let value;
+        [value, nextSeed] = rand.sample({ seed: nextSeed, maxSize: size });
+        return value;
+      });
+
+      const result = fn(...fns);
+
+      return [result, nextSeed];
+    });
   }
 }
 

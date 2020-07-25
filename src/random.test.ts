@@ -502,3 +502,16 @@ test("lazy evaluate code in a closure", () => {
   expect(a).toEqual([1]);
   expect(b).toEqual([1]);
 });
+
+test("derefences generators to functions", () => {
+  const gen = rand.deref(
+    [rand.integer(), rand.string(), rand.boolean()],
+    (getInt, getStr, getBool) => {
+      return [typeof getInt(), typeof getInt(), typeof getStr(), typeof getStr(), typeof getBool()];
+    }
+  );
+
+  const [arr] = gen.sample();
+
+  expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
+});
