@@ -528,13 +528,27 @@ test("compose maps two generators together", () => {
     .return(undefined)
     .composeMap(rand.boolean(), rand.string(), rand.float(), rand.object({}), getTypeof);
 
+  const genE = rand
+    .return(undefined)
+    .composeMap(rand.float(), rand.float(), rand.float(), rand.float(), (...args: any[]) => args);
+
   const [resultA] = genA.sample();
   const [resultB] = genB.sample();
   const [resultC] = genC.sample();
   const [resultD] = genD.sample();
+  const [resultE] = genE.sample({ seed: 12345 });
 
   expect(resultA).toEqual(["number", "boolean"]);
   expect(resultB).toEqual(["number", "boolean", "string"]);
   expect(resultC).toEqual(["number", "boolean", "string", "number"]);
   expect(resultD).toEqual(["undefined", "boolean", "string", "number", "object"]);
+
+  // assert that they don't reuse the same seed
+  expect(resultE).toEqual([
+    undefined,
+    -35.012848220723484,
+    85.60161273779835,
+    -74.6010240346336,
+    73.09555152182492,
+  ]);
 });
