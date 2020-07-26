@@ -515,3 +515,26 @@ test("derefences generators to functions", () => {
 
   expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
 });
+
+test("compose maps two generators together", () => {
+  const getTypeof = (...args: any[]) => {
+    return args.map((arg) => typeof arg);
+  };
+
+  const genA = rand.integer().composeMap(rand.boolean(), getTypeof);
+  const genB = rand.integer().composeMap(rand.boolean(), rand.string(), getTypeof);
+  const genC = rand.integer().composeMap(rand.boolean(), rand.string(), rand.float(), getTypeof);
+  const genD = rand
+    .return(undefined)
+    .composeMap(rand.boolean(), rand.string(), rand.float(), rand.object({}), getTypeof);
+
+  const [resultA] = genA.sample();
+  const [resultB] = genB.sample();
+  const [resultC] = genC.sample();
+  const [resultD] = genD.sample();
+
+  expect(resultA).toEqual(["number", "boolean"]);
+  expect(resultB).toEqual(["number", "boolean", "string"]);
+  expect(resultC).toEqual(["number", "boolean", "string", "number"]);
+  expect(resultD).toEqual(["undefined", "boolean", "string", "number", "object"]);
+});

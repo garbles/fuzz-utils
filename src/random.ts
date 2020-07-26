@@ -268,6 +268,46 @@ export class Random<T> {
     return new Random((size, seed) => this.generator(maxSize, seed));
   }
 
+  composeMap<U, V>(u: Random<U>, fn: (t: T, u: U) => V): Random<V>;
+  composeMap<U, V, W>(u: Random<U>, v: Random<V>, fn: (t: T, u: U, v: V) => W): Random<W>;
+  composeMap<U, V, W, X>(
+    u: Random<U>,
+    v: Random<V>,
+    w: Random<W>,
+    fn: (t: T, u: U, v: V, w: W) => X
+  ): Random<X>;
+  composeMap<U, V, W, X, Y>(
+    u: Random<U>,
+    v: Random<V>,
+    w: Random<W>,
+    x: Random<X>,
+    fn: (t: T, u: U, v: V, w: W, x: X) => Y
+  ): Random<Y>;
+  composeMap(...args: any[]): Random<any> {
+    return new Random((size, seed) => {
+      const last = args.length - 1;
+      const rands = args.slice(0, last);
+      const [fn] = args.slice(last);
+
+      let nextSeed = seed;
+      let t: T;
+      [t, nextSeed] = this.generator(size, nextSeed);
+
+      const fnArgs = rands.reduce(
+        (acc, rand) => {
+          let value: any;
+          [value, nextSeed] = rand.generator(size, nextSeed);
+          return acc.concat(value);
+        },
+        [t]
+      );
+
+      const result = fn(...fnArgs);
+
+      return [result, nextSeed];
+    });
+  }
+
   *toIterator(options: Partial<RandomOptions> = {}): Generator<T> {
     let { seed, maxSize } = options;
 
