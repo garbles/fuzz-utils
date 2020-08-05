@@ -523,6 +523,22 @@ test("lazy evaluate code in a closure", async () => {
   expect(b).toEqual([1]);
 });
 
+test("derefences generators to functions", async () => {
+  const gen = rand.deref(async (api) => {
+    return [
+      typeof (await api.integer()),
+      typeof (await api.integer()),
+      typeof (await api.string()),
+      typeof (await api.string()),
+      typeof (await api.boolean()),
+    ];
+  });
+
+  const [arr] = await gen.sample();
+
+  expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
+});
+
 test("compose maps two generators together", async () => {
   const getTypeof = (...args: any[]) => {
     return args.map((arg) => typeof arg);

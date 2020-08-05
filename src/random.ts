@@ -324,6 +324,11 @@ export class Random<T> {
 
     return [value, nextSeed];
   }
+
+  async then<U>(fn: (t: T) => U): Promise<U> {
+    const [next] = await this.sample();
+    return fn(next);
+  }
 }
 
 export class RandomApi {
@@ -483,6 +488,32 @@ export class RandomApi {
 
   lazy<T>(fn: () => Random<T>) {
     return this.return(undefined).bind(fn);
+  }
+
+  deref<T>(fn: (api: RandomApi) => Promise<T>): Random<T> {
+    return new Random(async (size, seed) => {
+      const keys = Object.keys(RandomApi.prototype) as (keyof RandomApi)[];
+      const api = {} as RandomApi;
+      let nextSeed = seed;
+
+      for (let key of keys) {
+        api[key] = (...args: any[]) => {
+          const result = (this as any)[key](...args);
+
+          result.then = async (fn: (arg: any) => void) => {
+            let value;
+            [value, nextSeed] = await result.sample({ seed: nextSeed, size });
+            return fn(value);
+          };
+
+          return result;
+        };
+      }
+
+      const result = await fn(api);
+
+      return [result, nextSeed];
+    });
   }
 }
 
