@@ -11,10 +11,10 @@ type Results<T> = {
   };
 };
 
-function* take<T>(gen: Generator<T>, total: number): Generator<T> {
+async function* take<T>(gen: Generator<T>, total: number): AsyncGenerator<T> {
   let i = 0;
 
-  for (let t of gen) {
+  for await (let t of gen) {
     yield t;
     i++;
     if (i >= total) {
@@ -452,10 +452,10 @@ test("maps values", async () => {
   const post = pre.map((x) => Math.abs(x));
 
   const { value: preValue, children: preChildren } = extract(
-    await pre.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]
+    (await pre.toRandomRoseTree().sample({ seed, maxSize: 1e4 }))[0]
   );
   const { value: postValue, children: postChildren } = extract(
-    await post.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]
+    (await post.toRandomRoseTree().sample({ seed, maxSize: 1e4 }))[0]
   );
 
   expect(Math.abs(preValue)).toEqual(postValue);
@@ -508,7 +508,12 @@ test("generates maybe values", async () => {
     .toIterator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 6;
 
-  const results = [...take(roses, 1e3)].map(extract);
+  let results: Results<unknown>[] = [];
+
+  for await (const next of take(roses, 1e3)) {
+    results.push(extract(next));
+  }
+
   const undef = results.filter((r) => r.value === undefined).length;
 
   expect(undef).toBeGreaterThan(expected * 0.8);
@@ -523,7 +528,12 @@ test("generates nullable values", async () => {
     .toIterator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 4;
 
-  const results = [...take(roses, 1e3)].map(extract);
+  let results: Results<unknown>[] = [];
+
+  for await (const next of take(roses, 1e3)) {
+    results.push(extract(next));
+  }
+
   const nulls = results.filter((r) => r.value === null).length;
 
   expect(nulls).toBeGreaterThan(expected * 0.8);
@@ -538,7 +548,7 @@ test("can resize the fuzzer", async () => {
     .toRandomRoseTree()
     .toIterator({ maxSize: 1e4 });
 
-  for (let rose of take(roses, 1)) {
+  for await (let rose of take(roses, 1)) {
     expect(parseInt(rose.value(), 10)).toBeLessThanOrEqual(10);
   }
 });
@@ -569,17 +579,19 @@ test("creates a frequency fuzzer", async () => {
     [3, fuzz.return("c")],
   ]);
 
-  const values = [...take(fuzzer.toRandomRoseTree().toIterator(), count)].map((rose) =>
-    rose.value()
-  );
+  let results: string[] = [];
+
+  for await (const next of take(fuzzer.toRandomRoseTree().toIterator(), count)) {
+    results.push(next.value());
+  }
 
   const expectedA = count / 9;
   const expectedB = (count * 5) / 9;
   const expectedC = (count * 3) / 9;
 
-  const as = values.filter((v) => v === "a").length;
-  const bs = values.filter((v) => v === "b").length;
-  const cs = values.filter((v) => v === "c").length;
+  const as = results.filter((v) => v === "a").length;
+  const bs = results.filter((v) => v === "b").length;
+  const cs = results.filter((v) => v === "c").length;
 
   expectWithin25Percent(as, expectedA);
   expectWithin25Percent(bs, expectedB);
@@ -589,13 +601,16 @@ test("creates a frequency fuzzer", async () => {
 test("generates an unbiased oneOf fuzzer", async () => {
   const count = 1e3;
   const fuzzer = fuzz.oneOf([fuzz.return("a"), fuzz.return("b"), fuzz.return("c")]);
-  const values = [...take(fuzzer.toRandomRoseTree().toIterator(), count)].map((rose) =>
-    rose.value()
-  );
 
-  const as = values.filter((v) => v === "a").length;
-  const bs = values.filter((v) => v === "b").length;
-  const cs = values.filter((v) => v === "c").length;
+  let results: string[] = [];
+
+  for await (const next of take(fuzzer.toRandomRoseTree().toIterator(), count)) {
+    results.push(next.value());
+  }
+
+  const as = results.filter((v) => v === "a").length;
+  const bs = results.filter((v) => v === "b").length;
+  const cs = results.filter((v) => v === "c").length;
 
   [as, bs, cs].forEach((num) => expectWithin25Percent(num, count / 3));
 });
@@ -604,15 +619,18 @@ describe("biases values toward extremes", () => {
   const count = 2e3;
 
   describe("numbers", () => {
-    const checker = (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
+    const checker = async (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
       const fuzzer = fuzz.integer();
-      const values = [
-        ...take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count),
-      ].map((rose) => rose.value());
 
-      const zeros = values.filter((v) => v === 0).length;
-      const min = values.filter((v) => v === -maxSize).length;
-      const max = values.filter((v) => v === maxSize).length;
+      let results: number[] = [];
+
+      for await (const next of take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count)) {
+        results.push(next.value());
+      }
+
+      const zeros = results.filter((v) => v === 0).length;
+      const min = results.filter((v) => v === -maxSize).length;
+      const max = results.filter((v) => v === maxSize).length;
 
       expectWithin25Percent(zeros, count * zeroProb);
       expectWithin25Percent(min, count * minProb);
@@ -625,15 +643,23 @@ describe("biases values toward extremes", () => {
   });
 
   describe("strings", () => {
-    const checker = (maxSize: number, zeroProb: number, shortProb: number, longProb: number) => {
+    const checker = async (
+      maxSize: number,
+      zeroProb: number,
+      shortProb: number,
+      longProb: number
+    ) => {
       const fuzzer = fuzz.string();
-      const values = [
-        ...take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count),
-      ].map((rose) => rose.value());
 
-      const zeros = values.filter((v) => v.length === 0).length;
-      const shorts = values.filter((v) => v.length <= 10 && v.length > 0).length;
-      const longs = values.filter((v) => v.length > 50).length;
+      const results: string[] = [];
+
+      for await (const next of take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count)) {
+        results.push(next.value());
+      }
+
+      const zeros = results.filter((v) => v.length === 0).length;
+      const shorts = results.filter((v) => v.length <= 10 && v.length > 0).length;
+      const longs = results.filter((v) => v.length > 50).length;
 
       expectWithin25Percent(zeros, count * zeroProb);
       expectWithin25Percent(shorts, count * shortProb);
@@ -650,13 +676,16 @@ describe("biases values toward extremes", () => {
   });
 
   describe("arrays", () => {
-    const checker = (maxSize: number, zeroProb: number) => {
+    const checker = async (maxSize: number, zeroProb: number) => {
       const fuzzer = fuzz.array(fuzz.return(0));
-      const values = [
-        ...take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count),
-      ].map((rose) => rose.value());
 
-      const zeros = values.filter((v) => v.length === 0).length;
+      const results: number[][] = [];
+
+      for await (const next of take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count)) {
+        results.push(next.value());
+      }
+
+      const zeros = results.filter((v) => v.length === 0).length;
       expectWithin25Percent(zeros, count * zeroProb);
     };
 
