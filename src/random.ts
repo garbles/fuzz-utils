@@ -496,6 +496,7 @@ export class RandomApi {
       const api = {} as RandomApi;
       let nextSeed = seed;
 
+      // TODO: change RandomApi instantiation to allow for `then` fn to be swapped
       for (let key of keys) {
         api[key] = (...args: any[]) => {
           const result = (this as any)[key](...args);
