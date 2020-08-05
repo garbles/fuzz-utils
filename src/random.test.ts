@@ -1,6 +1,6 @@
 import rand from "./random";
 
-async function* take<T>(gen: Generator<T>, total: number): AsyncGenerator<T> {
+async function* take<T>(gen: AsyncGenerator<T>, total: number): AsyncGenerator<T> {
   let i = 0;
 
   for await (let t of gen) {
@@ -59,17 +59,23 @@ test("different result if an appropriate result is used", async () => {
 });
 
 test("allows you to set a maximum number of tries and throw when it isn't met", async () => {
+  expect.assertions(4);
+
   const result = rand.integer();
   const a = jest.fn((x) => x > 10);
   const b = jest.fn((x) => x > 10);
 
-  expect(() => result.resize(10).filter(a).sample({ seed: 1e3 })).toThrow(
-    new Error("Could not satisfy filter in 10000 tries.")
-  );
+  try {
+    await result.resize(10).filter(a).sample({ seed: 1e3 });
+  } catch (err) {
+    expect(err).toEqual(new Error("Could not satisfy filter in 10000 tries."));
+  }
 
-  expect(() => result.resize(10).filter(b, 10).sample({ seed: 1e3 })).toThrow(
-    new Error("Could not satisfy filter in 10 tries.")
-  );
+  try {
+    await result.resize(10).filter(b, 10).sample({ seed: 1e3 });
+  } catch (err) {
+    expect(err).toEqual(new Error("Could not satisfy filter in 10 tries."));
+  }
 
   expect(a).toHaveBeenCalledTimes(1e4);
   expect(b).toHaveBeenCalledTimes(10);
@@ -174,7 +180,7 @@ test("can bind to a different generator", async () => {
     .sample({ seed: 1e2 });
 
   expect(typeof value).toEqual("string");
-  expect(value).toHaveLength(int.sample({ seed: 1e2 })[0]);
+  expect(value).toHaveLength((await int.sample({ seed: 1e2 }))[0]);
 });
 
 test("does not adopt the binding of the other generator", async () => {
@@ -266,11 +272,11 @@ test("skips n values from the same seed", async () => {
   const number = rand.integer();
 
   const [a] = await number.sample({ seed: 1e2 });
-  const [b] = number.skip(1).sample({ seed: 1e2 });
-  const [c] = number.skip(1).sample({ seed: 1e2 });
-  const [d] = number.skip(2).sample({ seed: 1e2 });
-  const [e] = number.skip(3).sample({ seed: 1e2 });
-  const [f] = number.skip(3).sample({ seed: 1e2 });
+  const [b] = await number.skip(1).sample({ seed: 1e2 });
+  const [c] = await number.skip(1).sample({ seed: 1e2 });
+  const [d] = await number.skip(2).sample({ seed: 1e2 });
+  const [e] = await number.skip(3).sample({ seed: 1e2 });
+  const [f] = await number.skip(3).sample({ seed: 1e2 });
 
   expect([b, c, d, e, f]).not.toContain(a);
   expect([b]).toContain(c);
@@ -515,19 +521,6 @@ test("lazy evaluate code in a closure", async () => {
 
   expect(a).toEqual([1]);
   expect(b).toEqual([1]);
-});
-
-test("derefences generators to functions", async () => {
-  const gen = rand.deref(
-    [rand.integer(), rand.string(), rand.boolean()],
-    (getInt, getStr, getBool) => {
-      return [typeof getInt(), typeof getInt(), typeof getStr(), typeof getStr(), typeof getBool()];
-    }
-  );
-
-  const [arr] = await gen.sample();
-
-  expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
 });
 
 test("compose maps two generators together", async () => {

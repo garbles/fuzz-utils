@@ -78,10 +78,10 @@ export class Runner<T, U> {
   }
 
   private async *toEventIterator(
-    iter: Generator<RoseTree<T, TestRun<U>>, any, unknown>,
+    iter: AsyncGenerator<RoseTree<T, TestRun<U>>, any, unknown>,
     depth = 0
   ): AsyncGenerator<RunnerEvent<U>, any, unknown> {
-    for (let rose of iter) {
+    for await (let rose of iter) {
       const test = rose.value();
       let error: Error | null = null;
 

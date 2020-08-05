@@ -7,7 +7,7 @@ export type Filter = { __FILTER__: true };
 export type RandomGenerator<T, U> = (
   size: number,
   seed: Seed
-) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
+) => Promise<[Random<T>, Shrink<T>, Seed, FilterMap<T, U>]>;
 
 const FILTER: Filter = { __FILTER__: true };
 
@@ -99,10 +99,10 @@ export class RoseTree<T, U> {
     return this.pair[1];
   }
 
-  public *children() {
+  public async *children() {
     const iterator = this.shrink.value(this.pair[0]);
 
-    for (let next of iterator) {
+    for await (let next of iterator) {
       const value = this.filterMap.apply(next);
 
       if (!isFilter(value)) {
@@ -231,7 +231,7 @@ export class Fuzz<T, U> {
   }
 
   static from<T>(random: Random<T>, shrink: Shrink<T>): Fuzz<T, T> {
-    return new Fuzz((size, seed) => {
+    return new Fuzz(async (size, seed) => {
       const filterMap = new FilterMap<T, T>((x) => x);
       return [random, shrink, seed, filterMap];
     });
@@ -244,8 +244,8 @@ export class Fuzz<T, U> {
    * @param fn Map function
    */
   map<V>(fn: (u: U) => V): Fuzz<T, V> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       const nextFilterMap = filterMap.map(fn);
       return [random, shrink, nextSeed, nextFilterMap];
     });
@@ -257,9 +257,9 @@ export class Fuzz<T, U> {
    * @param fn Mapping function to merge both values
    */
   merge<V, W, X>(fuzz: Fuzz<V, W>, fn: (u: U, w: W) => X): Fuzz<[T, V], X> {
-    return new Fuzz((size, seed) => {
-      const [randomT, shrinkT, seed2, filterMapT] = this.generator(size, seed);
-      const [randomV, shrinkV, seed3, filterMapV] = fuzz.generator(size, seed2);
+    return new Fuzz(async (size, seed) => {
+      const [randomT, shrinkT, seed2, filterMapT] = await this.generator(size, seed);
+      const [randomV, shrinkV, seed3, filterMapV] = await fuzz.generator(size, seed2);
 
       const nextRandom = rand.tuple([randomT, randomV]);
       const nextShrink = sh.tuple([shrinkT, shrinkV]);
@@ -285,8 +285,8 @@ export class Fuzz<T, U> {
    * @param fn Filter function
    */
   suchThat(fn: (u: U) => boolean): Fuzz<T, U> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       const nextFilterMap = filterMap.filter(fn);
       return [random, shrink, nextSeed, nextFilterMap];
     });
@@ -297,8 +297,8 @@ export class Fuzz<T, U> {
    * The result value will not shrink.
    */
   noShrink(): Fuzz<T, U> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       return [random, shrink.noShrink(), nextSeed, filterMap];
     });
   }
@@ -309,8 +309,8 @@ export class Fuzz<T, U> {
    * that matches `!!value === false` or `value.length === 0`.
    */
   noEmpty(): Fuzz<T, U> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       return [random.noEmpty(), shrink.noEmpty(), nextSeed, filterMap];
     });
   }
@@ -321,8 +321,8 @@ export class Fuzz<T, U> {
    * @param n the number of generated values where one value is _likely_ to be `undefined`.
    */
   maybe(n = 4): Fuzz<T | undefined, U | undefined> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       return [random.maybe(n), shrink.maybe(), nextSeed, filterMap.maybe()];
     });
   }
@@ -333,8 +333,8 @@ export class Fuzz<T, U> {
    * @param n the number of generated values where one value is _likely_ to be `null`.
    */
   nullable(n = 4): Fuzz<T | null, U | null> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       return [random.nullable(n), shrink.nullable(), nextSeed, filterMap.nullable()];
     });
   }
@@ -344,8 +344,8 @@ export class Fuzz<T, U> {
    * @param fn maps
    */
   bind<V, W>(fn: (u: U) => Fuzz<V, W>): Fuzz<V, W> {
-    return new Fuzz((size, seed) => {
-      const [random, , seed2, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, , seed2, filterMap] = await this.generator(size, seed);
 
       const nextRandom = random.filterMap<U>((t: T, REJECT) => {
         const result = filterMap.apply(t);
@@ -357,7 +357,7 @@ export class Fuzz<T, U> {
         return result;
       });
 
-      const [value, seed3] = nextRandom.sample({ seed: seed2, maxSize: size });
+      const [value, seed3] = await nextRandom.sample({ seed: seed2, maxSize: size });
 
       return fn(value).generator(size, seed3);
     });
@@ -368,8 +368,8 @@ export class Fuzz<T, U> {
    * @param maxSize Forced max size
    */
   resize(maxSize: number): Fuzz<T, U> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       return [random.resize(maxSize), shrink, nextSeed, filterMap];
     });
   }
@@ -379,8 +379,8 @@ export class Fuzz<T, U> {
    * @param fn Scaling function
    */
   scale(fn: (size: number) => number): Fuzz<T, U> {
-    return new Fuzz((size, seed) => {
-      const [random, shrink, nextSeed, filterMap] = this.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, nextSeed, filterMap] = await this.generator(size, seed);
       return [random.resize(fn(size)), shrink, nextSeed, filterMap];
     });
   }
@@ -389,10 +389,10 @@ export class Fuzz<T, U> {
    * Internal function. Turns the fuzzer into a `Random<RoseTree>`.
    */
   toRandomRoseTree(): Random<RoseTree<T, U>> {
-    return new Random((size, seed) => {
-      const [random, shrink, seed2, filterMap] = this.generator(size, seed);
+    return new Random(async (size, seed) => {
+      const [random, shrink, seed2, filterMap] = await this.generator(size, seed);
 
-      const [pair, seed3] = random
+      const [pair, seed3] = await random
         .filterMap<[T, U]>((t: T, REJECT) => {
           const next = filterMap.apply(t);
 
@@ -645,8 +645,8 @@ export class FuzzApi {
   array<T, U>(fuzz: Fuzz<T, U>): Fuzz<T[], U[]> {
     const biasedLength = biasedRandomNumber(true, false, true);
 
-    return new Fuzz((size, seed) => {
-      const [random, shrink, seed2, filterMap] = fuzz.generator(size, seed);
+    return new Fuzz(async (size, seed) => {
+      const [random, shrink, seed2, filterMap] = await fuzz.generator(size, seed);
       const nextRandom = biasedLength.bind((maxLength) => rand.array(random).resize(maxLength));
       const nextShrink = sh.array(shrink);
 
@@ -724,7 +724,7 @@ export class FuzzApi {
   ): Fuzz<[A, C, E, G, I, K], [B, D, F, H, J, L]>;
   tuple<T, U>(arr: Fuzz<T, U>[]): Fuzz<T[], U[]>;
   tuple(arr: Fuzz<any, any>[]): Fuzz<any, any> {
-    return new Fuzz((size, seed) => {
+    return new Fuzz(async (size, seed) => {
       const randoms: Random<any>[] = [];
       const shrinks: Shrink<any>[] = [];
       const filterMaps: FilterMap<any, any>[] = [];
@@ -734,7 +734,7 @@ export class FuzzApi {
         let shrink: Shrink<any>;
         let filterMap: FilterMap<any, any>;
 
-        [random, shrink, seed, filterMap] = fuzz.generator(size, seed);
+        [random, shrink, seed, filterMap] = await fuzz.generator(size, seed);
         randoms.push(random);
         shrinks.push(shrink);
         filterMaps.push(filterMap);
@@ -764,7 +764,7 @@ export class FuzzApi {
       return acc;
     }, {} as { [K in keyof T]: Fuzz<any, T[K]> });
 
-    return new Fuzz((size, seed) => {
+    return new Fuzz(async (size, seed) => {
       const randoms = {} as { [K in keyof T]: Random<T[K]> };
       const shrinks = {} as { [K in keyof T]: Shrink<T[K]> };
       const filterMaps = {} as { [K in keyof T]: FilterMap<any, T[K]> };
@@ -774,7 +774,7 @@ export class FuzzApi {
         let shrink: Shrink<T[keyof T]>;
         let filterMap: FilterMap<any, T[keyof T]>;
 
-        [random, shrink, seed, filterMap] = fuzzers[key].generator(size, seed);
+        [random, shrink, seed, filterMap] = await fuzzers[key].generator(size, seed);
         randoms[key] = random;
         shrinks[key] = shrink;
         filterMaps[key] = filterMap;
