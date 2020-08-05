@@ -15,8 +15,8 @@ function* take<T>(gen: Generator<T>, total: number): Generator<T> {
 test("same result will always generate the same integers", async () => {
   const result = rand.integer();
 
-  const [a] = result.sample({ seed: 1 });
-  const [b] = result.sample({ seed: 1 });
+  const [a] = await result.sample({ seed: 1 });
+  const [b] = await result.sample({ seed: 1 });
 
   expect(a).toEqual(b);
 });
@@ -24,8 +24,8 @@ test("same result will always generate the same integers", async () => {
 test("same result if the filter does not change the outcome", async () => {
   const result = rand.integer();
 
-  const [a] = result.resize(10).sample({ seed: 1 });
-  const [b] = result
+  const [a] = await result.resize(10).sample({ seed: 1 });
+  const [b] = await result
     .resize(10)
     .filter((x) => x < 11)
     .sample({ seed: 1 });
@@ -34,7 +34,7 @@ test("same result if the filter does not change the outcome", async () => {
 });
 
 test("filters and maps results until it does not return rand.FILTER_MAP_REJECT", async () => {
-  const [result] = rand
+  const [result] = await rand
     .integer()
     .filterMap((v, REJECT) => {
       if (v <= 90) {
@@ -51,8 +51,8 @@ test("filters and maps results until it does not return rand.FILTER_MAP_REJECT",
 test("different result if an appropriate result is used", async () => {
   const result = rand.integer();
 
-  const [a] = result.filter((x) => x > 0).sample({ seed: 1 });
-  const [b] = result.filter((x) => x === 0).sample({ seed: 1 });
+  const [a] = await result.filter((x) => x > 0).sample({ seed: 1 });
+  const [b] = await result.filter((x) => x === 0).sample({ seed: 1 });
 
   expect(a).not.toEqual(b);
   expect(b).toEqual(0);
@@ -78,14 +78,14 @@ test("allows you to set a maximum number of tries and throw when it isn't met", 
 test("same result will always generate the same list of integers", async () => {
   const result = rand.array(rand.integer());
 
-  const [a] = result.sample({ seed: 1, maxSize: 10 });
-  const [b] = result.sample({ seed: 1, maxSize: 10 });
+  const [a] = await result.sample({ seed: 1, maxSize: 10 });
+  const [b] = await result.sample({ seed: 1, maxSize: 10 });
 
   expect(a).toEqual(b);
 });
 
 test("creates a list of integers where all numbers are greater than 5", async () => {
-  const [value] = rand
+  const [value] = await rand
     .array(
       rand
         .integer()
@@ -106,19 +106,19 @@ test("create integers within a range", async () => {
 });
 
 test("creates boolean values", async () => {
-  const [value] = rand.array(rand.boolean()).sample({ seed: 1 });
+  const [value] = await rand.array(rand.boolean()).sample({ seed: 1 });
   value.forEach((v) => expect(typeof v).toEqual("boolean"));
 });
 
 test("creates character values", async () => {
-  const [valueA] = rand.character().sample({ seed: 1 });
+  const [valueA] = await rand.character().sample({ seed: 1 });
 
   expect(typeof valueA).toEqual("string");
   expect(valueA).toHaveLength(1);
 });
 
 test("creates string values", async () => {
-  const [value] = rand
+  const [value] = await rand
     .string()
     .resize(10)
     .filter((v) => v.length === 10)
@@ -129,7 +129,7 @@ test("creates string values", async () => {
 });
 
 test("can map values", async () => {
-  const [value] = rand
+  const [value] = await rand
     .array(
       rand
         .integer()
@@ -145,7 +145,7 @@ test("can map values", async () => {
 });
 
 test("can map and filter values", async () => {
-  const [value] = rand
+  const [value] = await rand
     .array(
       rand
         .integer()
@@ -164,7 +164,7 @@ test("can map and filter values", async () => {
 test("can bind to a different generator", async () => {
   const int = rand.integer();
 
-  const [value] = int
+  const [value] = await int
     .bind((v) => {
       return rand
         .string()
@@ -203,7 +203,7 @@ test("can assign frequency to results", async () => {
     [10, rand.return(0)],
   ]);
 
-  const [arr] = rand
+  const [arr] = await rand
     .array(freq)
     .resize(200)
     .filter((arr) => arr.length === 200)
@@ -216,7 +216,7 @@ test("can assign frequency to results", async () => {
 
 test("can sample a list", async () => {
   const sample = rand.oneOf([1, 2, 3]);
-  const [result] = rand
+  const [result] = await rand
     .array(sample)
     .resize(300)
     .filter((arr) => arr.length === 300)
@@ -240,9 +240,9 @@ test("can make composite objects", async () => {
     y: rand.integer(),
   });
 
-  const [a] = obj.sample({ seed: 1e2 });
-  const [b] = obj.sample({ seed: 1e3 });
-  const [c] = obj.sample({ seed: 1e3 });
+  const [a] = await obj.sample({ seed: 1e2 });
+  const [b] = await obj.sample({ seed: 1e3 });
+  const [c] = await obj.sample({ seed: 1e3 });
 
   expect(Object.keys(a)).toEqual(Object.keys(b));
   expect(a).not.toEqual(b);
@@ -255,8 +255,8 @@ test("can make objects with plain values as keys", async () => {
     y: 12,
   });
 
-  const [a] = obj.sample({ seed: 1e2 });
-  const [b] = obj.sample({ seed: 1e3 });
+  const [a] = await obj.sample({ seed: 1e2 });
+  const [b] = await obj.sample({ seed: 1e3 });
 
   expect(a.x).not.toEqual(b.x);
   expect(a.y).toEqual(b.y);
@@ -265,7 +265,7 @@ test("can make objects with plain values as keys", async () => {
 test("skips n values from the same seed", async () => {
   const number = rand.integer();
 
-  const [a] = number.sample({ seed: 1e2 });
+  const [a] = await number.sample({ seed: 1e2 });
   const [b] = number.skip(1).sample({ seed: 1e2 });
   const [c] = number.skip(1).sample({ seed: 1e2 });
   const [d] = number.skip(2).sample({ seed: 1e2 });
@@ -293,9 +293,9 @@ test("memoizes the result so that they are not recomputed with the same seed", a
     .filter(filterer)
     .memoize();
 
-  const [a] = int.sample({ seed: 1e2 });
-  const [b] = int.sample({ seed: 1e2 });
-  const [c] = int.sample({ seed: 1e2 });
+  const [a] = await int.sample({ seed: 1e2 });
+  const [b] = await int.sample({ seed: 1e2 });
+  const [c] = await int.sample({ seed: 1e2 });
 
   expect(a).toEqual(b);
   expect(a).toEqual(c);
@@ -307,8 +307,8 @@ test("keeps memoization even if chained again in a new context if the same seed 
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const int = rand.integer().map(mapper).memoize();
 
-  int.sample({ seed: 1e3 });
-  int.filter((x) => x > -1e5).sample({ seed: 1e3 });
+  await int.sample({ seed: 1e3 });
+  await int.filter((x) => x > -1e5).sample({ seed: 1e3 });
 
   expect(mapper).toHaveBeenCalledTimes(1);
 });
@@ -317,8 +317,8 @@ test("keeps memoization even if chained again in a new context unless a new seed
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const int = rand.integer().map(mapper).memoize();
 
-  int.sample({ seed: 1e3 });
-  int.filter((x) => x > -1e5).sample({ seed: 1e4 });
+  await int.sample({ seed: 1e3 });
+  await int.filter((x) => x > -1e5).sample({ seed: 1e4 });
 
   expect(mapper).toHaveBeenCalledTimes(2);
 });
@@ -336,9 +336,9 @@ test("can turn off memoziation", async () => {
     .map(mapper)
     .filter(filterer);
 
-  const a = int.sample({ seed: 1e2 });
-  const b = int.sample({ seed: 1e2 });
-  const c = int.sample({ seed: 1e2 });
+  const a = await int.sample({ seed: 1e2 });
+  const b = await int.sample({ seed: 1e2 });
+  const c = await int.sample({ seed: 1e2 });
 
   expect(a).toEqual(b);
   expect(a).toEqual(c);
@@ -353,7 +353,7 @@ test("creates a tuple from other generators", async () => {
     rand.object({ hello: "world", thing: rand.boolean() }),
   ]);
 
-  const [a] = tuple.sample({ seed: 1e2 });
+  const [a] = await tuple.sample({ seed: 1e2 });
 
   expect(typeof a[0]).toEqual("number");
   expect(typeof a[1]).toEqual("string");
@@ -415,12 +415,12 @@ test("resizes generators", async () => {
 });
 
 test("generates empty values when maxSize is zero", async () => {
-  const [zero] = rand.integer().sample({ maxSize: 0 });
-  const [falze] = rand.boolean().sample({ maxSize: 0 });
-  const [emptyArr] = rand.array(rand.integer()).sample({ maxSize: 0 });
-  const [emptyStr] = rand.string().sample({ maxSize: 0 });
+  const [zero] = await rand.integer().sample({ maxSize: 0 });
+  const [falze] = await rand.boolean().sample({ maxSize: 0 });
+  const [emptyArr] = await rand.array(rand.integer()).sample({ maxSize: 0 });
+  const [emptyStr] = await rand.string().sample({ maxSize: 0 });
 
-  const [emptyObj] = rand
+  const [emptyObj] = await rand
     .object({
       a: rand.integer(),
       b: rand.boolean(),
@@ -437,14 +437,14 @@ test("generates empty values when maxSize is zero", async () => {
 });
 
 test("generates bytes", async () => {
-  const [byte] = rand.byte().sample();
+  const [byte] = await rand.byte().sample();
 
   expect(byte).toBeGreaterThanOrEqual(0);
   expect(byte).toBeLessThanOrEqual(255);
 });
 
 test("generates uuids", async () => {
-  const [uuid] = rand.uuid().sample();
+  const [uuid] = await rand.uuid().sample();
 
   expect(uuid).toHaveLength(36);
   expect(uuid[8]).toEqual("-");
@@ -493,8 +493,8 @@ test("lazy evaluate code in a closure", async () => {
     return rand.return(mutated);
   });
 
-  const [a] = gen.sample();
-  const [b] = gen.sample();
+  const [a] = await gen.sample();
+  const [b] = await gen.sample();
 
   expect(a).toEqual([1]);
   expect(b).toEqual([1]);
@@ -508,7 +508,7 @@ test("derefences generators to functions", async () => {
     }
   );
 
-  const [arr] = gen.sample();
+  const [arr] = await gen.sample();
 
   expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
 });
@@ -529,11 +529,11 @@ test("compose maps two generators together", async () => {
     .return(undefined)
     .composeMap(rand.float(), rand.float(), rand.float(), rand.float(), (...args: any[]) => args);
 
-  const [resultA] = genA.sample();
-  const [resultB] = genB.sample();
-  const [resultC] = genC.sample();
-  const [resultD] = genD.sample();
-  const [resultE] = genE.sample({ seed: 12345 });
+  const [resultA] = await genA.sample();
+  const [resultB] = await genB.sample();
+  const [resultC] = await genC.sample();
+  const [resultD] = await genD.sample();
+  const [resultE] = await genE.sample({ seed: 12345 });
 
   expect(resultA).toEqual(["number", "boolean"]);
   expect(resultB).toEqual(["number", "boolean", "string"]);
