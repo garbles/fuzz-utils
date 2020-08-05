@@ -11,20 +11,17 @@ type Results<T> = {
   };
 };
 
-const take = <T>(gen: Generator<T>, total: number): T[] => {
-  let result: T[] = Array(total);
+function* take<T>(gen: Generator<T>, total: number): Generator<T> {
   let i = 0;
 
   for (let t of gen) {
-    result[i] = t;
+    yield t;
     i++;
     if (i >= total) {
       break;
     }
   }
-
-  return result;
-};
+}
 
 const extract = <T>(rose: RoseTree<any, T>): Results<T> => {
   let children: RoseTree<any, T>[] = [];
@@ -65,7 +62,7 @@ const expectWithin25Percent = (value: number, expected: number) => {
   expect(value).toBeLessThanOrEqual(expected * 1.25);
 };
 
-test("shrinks positive integers", () => {
+test("shrinks positive integers", async () => {
   const [rose] = fuzz.posInteger().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -87,7 +84,7 @@ test("shrinks positive integers", () => {
   }
 });
 
-test("shrinks positive floats", () => {
+test("shrinks positive floats", async () => {
   const [rose] = fuzz.posFloat().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -109,7 +106,7 @@ test("shrinks positive floats", () => {
   }
 });
 
-test("shrinks positive numbers", () => {
+test("shrinks positive numbers", async () => {
   const [rose] = fuzz.posNumber().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -131,7 +128,7 @@ test("shrinks positive numbers", () => {
   }
 });
 
-test("shrinks negative integers", () => {
+test("shrinks negative integers", async () => {
   const [rose] = fuzz.negInteger().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -151,7 +148,7 @@ test("shrinks negative integers", () => {
   }
 });
 
-test("shrinks negative floats", () => {
+test("shrinks negative floats", async () => {
   const [rose] = fuzz.negFloat().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -171,7 +168,7 @@ test("shrinks negative floats", () => {
   }
 });
 
-test("shrinks negative numbers", () => {
+test("shrinks negative numbers", async () => {
   const [rose] = fuzz.negNumber().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -191,7 +188,7 @@ test("shrinks negative numbers", () => {
   }
 });
 
-test("shrinks integers within a range", () => {
+test("shrinks integers within a range", async () => {
   const [rose] = fuzz.integerWithin(3, 30).toRandomRoseTree().sample();
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -218,7 +215,7 @@ test("shrinks integers within a range", () => {
   }
 });
 
-test("shrinks floats within a range", () => {
+test("shrinks floats within a range", async () => {
   const [rose] = fuzz.floatWithin(3.5, 30).toRandomRoseTree().sample();
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -245,7 +242,7 @@ test("shrinks floats within a range", () => {
   }
 });
 
-test("shrinks mixed integers", () => {
+test("shrinks mixed integers", async () => {
   const [rose] = fuzz.integer().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children } = extract(rose);
 
@@ -260,7 +257,7 @@ test("shrinks mixed integers", () => {
   }
 });
 
-test("shrinks mixed numbers", () => {
+test("shrinks mixed numbers", async () => {
   const [rose] = fuzz.number().toRandomRoseTree().sample({ maxSize: 1e3 });
   const { value, children } = extract(rose);
 
@@ -275,7 +272,7 @@ test("shrinks mixed numbers", () => {
   }
 });
 
-test("shrinks booleans", () => {
+test("shrinks booleans", async () => {
   const [rose] = fuzz.boolean().toRandomRoseTree().sample();
 
   const { value, children, childrenOfChildren } = extract(rose);
@@ -288,7 +285,7 @@ test("shrinks booleans", () => {
   }
 });
 
-test("shrinks strings", () => {
+test("shrinks strings", async () => {
   const [rose] = fuzz.string().toRandomRoseTree().sample({ maxSize: 10 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -310,7 +307,7 @@ test("shrinks strings", () => {
   }
 });
 
-test("shrinks characters", () => {
+test("shrinks characters", async () => {
   const [rose] = fuzz.character().toRandomRoseTree().sample();
   const { value, children, firstChild, childrenOfChildren } = extract(rose);
 
@@ -325,7 +322,7 @@ test("shrinks characters", () => {
   }
 });
 
-test("shrinks arrays of things", () => {
+test("shrinks arrays of things", async () => {
   const [rose] = fuzz.array(fuzz.integer()).toRandomRoseTree().sample({ maxSize: 20 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -347,7 +344,7 @@ test("shrinks arrays of things", () => {
   }
 });
 
-test("shrinks tuples", () => {
+test("shrinks tuples", async () => {
   const [rose] = fuzz
     .tuple([fuzz.integer(), fuzz.string()])
     .toRandomRoseTree()
@@ -367,7 +364,7 @@ test("shrinks tuples", () => {
   }
 });
 
-test("shrinks objects", () => {
+test("shrinks objects", async () => {
   const [rose] = fuzz
     .object({
       name: fuzz.string().resize(10),
@@ -415,7 +412,7 @@ test("shrinks objects", () => {
   }
 });
 
-test("filters out unwanted values", () => {
+test("filters out unwanted values", async () => {
   const [rose] = fuzz
     .integer()
     .resize(1e4)
@@ -449,7 +446,7 @@ test("filters out unwanted values", () => {
   }
 });
 
-test("maps values", () => {
+test("maps values", async () => {
   const seed = Date.now();
   const pre = fuzz.integer();
   const post = pre.map((x) => Math.abs(x));
@@ -465,7 +462,7 @@ test("maps values", () => {
   expect(preChildren.map(Math.abs)).toEqual(postChildren);
 });
 
-test("binds to new fuzzers", () => {
+test("binds to new fuzzers", async () => {
   const [rose] = fuzz
     .posInteger()
     .bind((x) => fuzz.string().resize(x))
@@ -480,7 +477,7 @@ test("binds to new fuzzers", () => {
   });
 });
 
-test("does not include empty values", () => {
+test("does not include empty values", async () => {
   const [rose] = fuzz.integer().noEmpty().toRandomRoseTree().sample({ maxSize: 10 });
   const { value, children, firstChild, secondChild, childrenOfChildren } = extract(rose);
 
@@ -503,7 +500,7 @@ test("does not include empty values", () => {
   }
 });
 
-test("generates maybe values", () => {
+test("generates maybe values", async () => {
   const roses = fuzz
     .integer()
     .maybe(6)
@@ -511,14 +508,14 @@ test("generates maybe values", () => {
     .toIterator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 6;
 
-  const results = take(roses, 1e3).map(extract);
+  const results = [...take(roses, 1e3)].map(extract);
   const undef = results.filter((r) => r.value === undefined).length;
 
   expect(undef).toBeGreaterThan(expected * 0.8);
   expect(undef).toBeLessThan(expected * 1.2);
 });
 
-test("generates nullable values", () => {
+test("generates nullable values", async () => {
   const roses = fuzz
     .integer()
     .nullable(4)
@@ -526,14 +523,14 @@ test("generates nullable values", () => {
     .toIterator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 4;
 
-  const results = take(roses, 1e3).map(extract);
+  const results = [...take(roses, 1e3)].map(extract);
   const nulls = results.filter((r) => r.value === null).length;
 
   expect(nulls).toBeGreaterThan(expected * 0.8);
   expect(nulls).toBeLessThan(expected * 1.2);
 });
 
-test("can resize the fuzzer", () => {
+test("can resize the fuzzer", async () => {
   const roses = fuzz
     .posInteger()
     .map((i) => i.toString())
@@ -546,7 +543,7 @@ test("can resize the fuzzer", () => {
   }
 });
 
-test("create a constant value", () => {
+test("create a constant value", async () => {
   const [rose] = fuzz.return(1234).toRandomRoseTree().sample();
   const { value, children } = extract(rose);
 
@@ -554,7 +551,7 @@ test("create a constant value", () => {
   expect(children).toEqual([]);
 });
 
-test("creates a uuid", () => {
+test("creates a uuid", async () => {
   const [rose] = fuzz.uuid().toRandomRoseTree().sample();
   const { value, children } = extract(rose);
 
@@ -564,7 +561,7 @@ test("creates a uuid", () => {
   expect(children).toEqual([]);
 });
 
-test("creates a frequency fuzzer", () => {
+test("creates a frequency fuzzer", async () => {
   const count = 2e3;
   const fuzzer = fuzz.frequency([
     [1, fuzz.return("a")],
@@ -572,7 +569,9 @@ test("creates a frequency fuzzer", () => {
     [3, fuzz.return("c")],
   ]);
 
-  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map((rose) => rose.value());
+  const values = [...take(fuzzer.toRandomRoseTree().toIterator(), count)].map((rose) =>
+    rose.value()
+  );
 
   const expectedA = count / 9;
   const expectedB = (count * 5) / 9;
@@ -587,10 +586,12 @@ test("creates a frequency fuzzer", () => {
   expectWithin25Percent(cs, expectedC);
 });
 
-test("generates an unbiased oneOf fuzzer", () => {
+test("generates an unbiased oneOf fuzzer", async () => {
   const count = 1e3;
   const fuzzer = fuzz.oneOf([fuzz.return("a"), fuzz.return("b"), fuzz.return("c")]);
-  const values = take(fuzzer.toRandomRoseTree().toIterator(), count).map((rose) => rose.value());
+  const values = [...take(fuzzer.toRandomRoseTree().toIterator(), count)].map((rose) =>
+    rose.value()
+  );
 
   const as = values.filter((v) => v === "a").length;
   const bs = values.filter((v) => v === "b").length;
@@ -605,9 +606,9 @@ describe("biases values toward extremes", () => {
   describe("numbers", () => {
     const checker = (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
       const fuzzer = fuzz.integer();
-      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map((rose) =>
-        rose.value()
-      );
+      const values = [
+        ...take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count),
+      ].map((rose) => rose.value());
 
       const zeros = values.filter((v) => v === 0).length;
       const min = values.filter((v) => v === -maxSize).length;
@@ -626,9 +627,9 @@ describe("biases values toward extremes", () => {
   describe("strings", () => {
     const checker = (maxSize: number, zeroProb: number, shortProb: number, longProb: number) => {
       const fuzzer = fuzz.string();
-      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map((rose) =>
-        rose.value()
-      );
+      const values = [
+        ...take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count),
+      ].map((rose) => rose.value());
 
       const zeros = values.filter((v) => v.length === 0).length;
       const shorts = values.filter((v) => v.length <= 10 && v.length > 0).length;
@@ -639,7 +640,7 @@ describe("biases values toward extremes", () => {
       expectWithin25Percent(longs, count * longProb);
     };
 
-    test("maxSize === 100", () => {
+    test("maxSize === 100", async () => {
       checker(100, 1 / 10, 6 / 10, 1 / 10);
     });
 
@@ -651,9 +652,9 @@ describe("biases values toward extremes", () => {
   describe("arrays", () => {
     const checker = (maxSize: number, zeroProb: number) => {
       const fuzzer = fuzz.array(fuzz.return(0));
-      const values = take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count).map((rose) =>
-        rose.value()
-      );
+      const values = [
+        ...take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count),
+      ].map((rose) => rose.value());
 
       const zeros = values.filter((v) => v.length === 0).length;
       expectWithin25Percent(zeros, count * zeroProb);
@@ -665,7 +666,7 @@ describe("biases values toward extremes", () => {
   });
 });
 
-test("lazily returns a fuzzer", () => {
+test("lazily returns a fuzzer", async () => {
   const fn = jest.fn(() => fuzz.string());
   const fuzzer = fuzz.lazy(fn);
 
@@ -684,7 +685,7 @@ test("lazily returns a fuzzer", () => {
   expect(fn).toHaveBeenCalledTimes(2);
 });
 
-test("merges two fuzzers together", () => {
+test("merges two fuzzers together", async () => {
   const fuzzA = fuzz.integer();
   const fuzzB = fuzz.boolean();
 
@@ -700,7 +701,7 @@ test("merges two fuzzers together", () => {
   expect(value[2]).toEqual(12);
 });
 
-test("spreads many fuzzers together", () => {
+test("spreads many fuzzers together", async () => {
   const fuzzA = fuzz.object({
     a: fuzz.integer(),
     b: fuzz.boolean(),
@@ -732,7 +733,7 @@ test("spreads many fuzzers together", () => {
   children.forEach(expectSpread);
 });
 
-test("spreads no fuzzers together", () => {
+test("spreads no fuzzers together", async () => {
   const fuzzer = fuzz.spread([]);
   let [rose] = fuzzer.toRandomRoseTree().sample();
   let { value } = extract(rose);
@@ -740,7 +741,7 @@ test("spreads no fuzzers together", () => {
   expect(value).toEqual({});
 });
 
-it("can map values to functions", () => {
+it("can map values to functions", async () => {
   const fuzzer = fuzz.string().map((u) => () => u);
   const randRoses = fuzzer.toRandomRoseTree();
 

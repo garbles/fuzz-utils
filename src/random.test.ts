@@ -1,21 +1,18 @@
 import rand from "./random";
 
-const take = <T>(gen: Generator<T>, total: number): T[] => {
-  let result: T[] = Array(total);
+function* take<T>(gen: Generator<T>, total: number): Generator<T> {
   let i = 0;
 
   for (let t of gen) {
-    result[i] = t;
+    yield t;
     i++;
     if (i >= total) {
       break;
     }
   }
+}
 
-  return result;
-};
-
-test("same result will always generate the same integers", () => {
+test("same result will always generate the same integers", async () => {
   const result = rand.integer();
 
   const [a] = result.sample({ seed: 1 });
@@ -24,7 +21,7 @@ test("same result will always generate the same integers", () => {
   expect(a).toEqual(b);
 });
 
-test("same result if the filter does not change the outcome", () => {
+test("same result if the filter does not change the outcome", async () => {
   const result = rand.integer();
 
   const [a] = result.resize(10).sample({ seed: 1 });
@@ -36,7 +33,7 @@ test("same result if the filter does not change the outcome", () => {
   expect(a).toEqual(b);
 });
 
-test("filters and maps results until it does not return rand.FILTER_MAP_REJECT", () => {
+test("filters and maps results until it does not return rand.FILTER_MAP_REJECT", async () => {
   const [result] = rand
     .integer()
     .filterMap((v, REJECT) => {
@@ -51,7 +48,7 @@ test("filters and maps results until it does not return rand.FILTER_MAP_REJECT",
   expect(result).toBeGreaterThan(90);
 });
 
-test("different result if an appropriate result is used", () => {
+test("different result if an appropriate result is used", async () => {
   const result = rand.integer();
 
   const [a] = result.filter((x) => x > 0).sample({ seed: 1 });
@@ -61,7 +58,7 @@ test("different result if an appropriate result is used", () => {
   expect(b).toEqual(0);
 });
 
-test("allows you to set a maximum number of tries and throw when it isn't met", () => {
+test("allows you to set a maximum number of tries and throw when it isn't met", async () => {
   const result = rand.integer();
   const a = jest.fn((x) => x > 10);
   const b = jest.fn((x) => x > 10);
@@ -78,7 +75,7 @@ test("allows you to set a maximum number of tries and throw when it isn't met", 
   expect(b).toHaveBeenCalledTimes(10);
 });
 
-test("same result will always generate the same list of integers", () => {
+test("same result will always generate the same list of integers", async () => {
   const result = rand.array(rand.integer());
 
   const [a] = result.sample({ seed: 1, maxSize: 10 });
@@ -87,7 +84,7 @@ test("same result will always generate the same list of integers", () => {
   expect(a).toEqual(b);
 });
 
-test("creates a list of integers where all numbers are greater than 5", () => {
+test("creates a list of integers where all numbers are greater than 5", async () => {
   const [value] = rand
     .array(
       rand
@@ -101,26 +98,26 @@ test("creates a list of integers where all numbers are greater than 5", () => {
   value.forEach((v) => expect(v).toBeGreaterThan(5));
 });
 
-test("create integers within a range", () => {
+test("create integers within a range", async () => {
   for (let value of take(rand.integerWithin(3, 7).toIterator(), 50)) {
     expect(value).toBeGreaterThanOrEqual(3);
     expect(value).toBeLessThanOrEqual(7);
   }
 });
 
-test("creates boolean values", () => {
+test("creates boolean values", async () => {
   const [value] = rand.array(rand.boolean()).sample({ seed: 1 });
   value.forEach((v) => expect(typeof v).toEqual("boolean"));
 });
 
-test("creates character values", () => {
+test("creates character values", async () => {
   const [valueA] = rand.character().sample({ seed: 1 });
 
   expect(typeof valueA).toEqual("string");
   expect(valueA).toHaveLength(1);
 });
 
-test("creates string values", () => {
+test("creates string values", async () => {
   const [value] = rand
     .string()
     .resize(10)
@@ -131,7 +128,7 @@ test("creates string values", () => {
   expect(value).toHaveLength(10);
 });
 
-test("can map values", () => {
+test("can map values", async () => {
   const [value] = rand
     .array(
       rand
@@ -147,7 +144,7 @@ test("can map values", () => {
   });
 });
 
-test("can map and filter values", () => {
+test("can map and filter values", async () => {
   const [value] = rand
     .array(
       rand
@@ -164,7 +161,7 @@ test("can map and filter values", () => {
   value.forEach((v) => expect(v).toEqual(5));
 });
 
-test("can bind to a different generator", () => {
+test("can bind to a different generator", async () => {
   const int = rand.integer();
 
   const [value] = int
@@ -180,7 +177,7 @@ test("can bind to a different generator", () => {
   expect(value).toHaveLength(int.sample({ seed: 1e2 })[0]);
 });
 
-test("does not adopt the binding of the other generator", () => {
+test("does not adopt the binding of the other generator", async () => {
   const arrs = rand
     .posInteger()
     .resize(100)
@@ -197,7 +194,7 @@ test("does not adopt the binding of the other generator", () => {
   }
 });
 
-test("can assign frequency to results", () => {
+test("can assign frequency to results", async () => {
   const freq = rand.frequency([
     [1, rand.return(1)],
     [1, rand.return(2)],
@@ -217,7 +214,7 @@ test("can assign frequency to results", () => {
   expect(zeros).toBeGreaterThan(100);
 });
 
-test("can sample a list", () => {
+test("can sample a list", async () => {
   const sample = rand.oneOf([1, 2, 3]);
   const [result] = rand
     .array(sample)
@@ -237,7 +234,7 @@ test("can sample a list", () => {
   expect(threes).toBeLessThan(120);
 });
 
-test("can make composite objects", () => {
+test("can make composite objects", async () => {
   const obj = rand.object({
     x: rand.integer(),
     y: rand.integer(),
@@ -252,7 +249,7 @@ test("can make composite objects", () => {
   expect(b).toEqual(c);
 });
 
-test("can make objects with plain values as keys", () => {
+test("can make objects with plain values as keys", async () => {
   const obj = rand.object({
     x: rand.integer(),
     y: 12,
@@ -265,7 +262,7 @@ test("can make objects with plain values as keys", () => {
   expect(a.y).toEqual(b.y);
 });
 
-test("skips n values from the same seed", () => {
+test("skips n values from the same seed", async () => {
   const number = rand.integer();
 
   const [a] = number.sample({ seed: 1e2 });
@@ -282,7 +279,7 @@ test("skips n values from the same seed", () => {
   expect([e]).toContain(f);
 });
 
-test("memoizes the result so that they are not recomputed with the same seed", () => {
+test("memoizes the result so that they are not recomputed with the same seed", async () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const filterer = jest.fn((x) => x !== 0);
   const int = rand
@@ -306,7 +303,7 @@ test("memoizes the result so that they are not recomputed with the same seed", (
   expect(filterer).toHaveBeenCalledTimes(3);
 });
 
-test("keeps memoization even if chained again in a new context if the same seed is used", () => {
+test("keeps memoization even if chained again in a new context if the same seed is used", async () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const int = rand.integer().map(mapper).memoize();
 
@@ -316,7 +313,7 @@ test("keeps memoization even if chained again in a new context if the same seed 
   expect(mapper).toHaveBeenCalledTimes(1);
 });
 
-test("keeps memoization even if chained again in a new context unless a new seed is used", () => {
+test("keeps memoization even if chained again in a new context unless a new seed is used", async () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const int = rand.integer().map(mapper).memoize();
 
@@ -326,7 +323,7 @@ test("keeps memoization even if chained again in a new context unless a new seed
   expect(mapper).toHaveBeenCalledTimes(2);
 });
 
-test("can turn off memoziation", () => {
+test("can turn off memoziation", async () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const filterer = jest.fn((x) => x !== 0);
   const int = rand
@@ -349,7 +346,7 @@ test("can turn off memoziation", () => {
   expect(filterer).toHaveBeenCalledTimes(9);
 });
 
-test("creates a tuple from other generators", () => {
+test("creates a tuple from other generators", async () => {
   const tuple = rand.tuple([
     rand.integer(),
     rand.string(),
@@ -364,7 +361,7 @@ test("creates a tuple from other generators", () => {
   expect(typeof a[2].thing).toEqual("boolean");
 });
 
-test("generates a list of values", () => {
+test("generates a list of values", async () => {
   const numbers = rand.integer().toIterator({ seed: 1e5 });
 
   for (let n of take(numbers, 50)) {
@@ -372,7 +369,7 @@ test("generates a list of values", () => {
   }
 });
 
-test("generates non empty values", () => {
+test("generates non empty values", async () => {
   const numbers = rand.integer().noEmpty().toIterator({ seed: 1e5 });
 
   const array = rand.array(rand.integer()).noEmpty().toIterator({ seed: 1e5 });
@@ -386,26 +383,26 @@ test("generates non empty values", () => {
   }
 });
 
-test("generates nullable values", () => {
+test("generates nullable values", async () => {
   const numbers = rand.integer().nullable(4).toIterator({ seed: Date.now() });
   const expected = 1000 / 4;
 
-  const nulls = take(numbers, 1000).filter((x) => x === null).length;
+  const nulls = [...take(numbers, 1000)].filter((x) => x === null).length;
 
   expect(nulls).toBeGreaterThan(expected * 0.8);
   expect(nulls).toBeLessThan(expected * 1.2);
 });
 
-test("generates maybe values", () => {
+test("generates maybe values", async () => {
   const numbers = rand.integer().maybe(5).toIterator({ seed: Date.now() });
   const expected = 1000 / 5;
-  const undef = take(numbers, 1000).filter((x) => x === undefined).length;
+  const undef = [...take(numbers, 1000)].filter((x) => x === undefined).length;
 
   expect(undef).toBeGreaterThan(expected * 0.8);
   expect(undef).toBeLessThan(expected * 1.2);
 });
 
-test("resizes generators", () => {
+test("resizes generators", async () => {
   const strings = rand
     .posInteger()
     .resize(10)
@@ -417,7 +414,7 @@ test("resizes generators", () => {
   }
 });
 
-test("generates empty values when maxSize is zero", () => {
+test("generates empty values when maxSize is zero", async () => {
   const [zero] = rand.integer().sample({ maxSize: 0 });
   const [falze] = rand.boolean().sample({ maxSize: 0 });
   const [emptyArr] = rand.array(rand.integer()).sample({ maxSize: 0 });
@@ -439,14 +436,14 @@ test("generates empty values when maxSize is zero", () => {
   expect(emptyObj).toEqual({ a: 0, b: false, c: [], d: "" });
 });
 
-test("generates bytes", () => {
+test("generates bytes", async () => {
   const [byte] = rand.byte().sample();
 
   expect(byte).toBeGreaterThanOrEqual(0);
   expect(byte).toBeLessThanOrEqual(255);
 });
 
-test("generates uuids", () => {
+test("generates uuids", async () => {
   const [uuid] = rand.uuid().sample();
 
   expect(uuid).toHaveLength(36);
@@ -465,9 +462,9 @@ test("generates uuids", () => {
     });
 });
 
-test("generates an unbiased integer within a range", () => {
+test("generates an unbiased integer within a range", async () => {
   const count = 1e3;
-  const arr = take(rand.integerWithin(0, 4).toIterator(), count);
+  const arr = [...take(rand.integerWithin(0, 4).toIterator(), count)];
 
   const results = arr.reduce(
     (acc, num) => {
@@ -488,7 +485,7 @@ test("generates an unbiased integer within a range", () => {
   });
 });
 
-test("lazy evaluate code in a closure", () => {
+test("lazy evaluate code in a closure", async () => {
   const gen = rand.lazy(() => {
     const mutated = [];
     mutated.push(1);
@@ -503,7 +500,7 @@ test("lazy evaluate code in a closure", () => {
   expect(b).toEqual([1]);
 });
 
-test("derefences generators to functions", () => {
+test("derefences generators to functions", async () => {
   const gen = rand.deref(
     [rand.integer(), rand.string(), rand.boolean()],
     (getInt, getStr, getBool) => {
@@ -516,7 +513,7 @@ test("derefences generators to functions", () => {
   expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
 });
 
-test("compose maps two generators together", () => {
+test("compose maps two generators together", async () => {
   const getTypeof = (...args: any[]) => {
     return args.map((arg) => typeof arg);
   };
