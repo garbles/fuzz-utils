@@ -150,11 +150,11 @@ const frequency = <T>(contexts: [number, RandomGenerator<T>][]): RandomGenerator
 
 export class Random<T> {
   static return<U>(value: U | Random<U>): Random<U> {
-    if (!(value instanceof Random)) {
-      return new Random(constant(value));
+    if (value instanceof Random) {
+      return value;
     }
 
-    return value;
+    return new Random(constant(value));
   }
 
   constructor(public readonly generator: RandomGenerator<T>) {}
