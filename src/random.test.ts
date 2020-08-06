@@ -503,19 +503,6 @@ test("lazy evaluate code in a closure", () => {
   expect(b).toEqual([1]);
 });
 
-test("derefences generators to functions", () => {
-  const gen = rand.deref(
-    [rand.integer(), rand.string(), rand.boolean()],
-    (getInt, getStr, getBool) => {
-      return [typeof getInt(), typeof getInt(), typeof getStr(), typeof getStr(), typeof getBool()];
-    }
-  );
-
-  const [arr] = gen.sample();
-
-  expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
-});
-
 test("compose maps two generators together", () => {
   const getTypeof = (...args: any[]) => {
     return args.map((arg) => typeof arg);
