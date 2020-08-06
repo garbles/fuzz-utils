@@ -588,6 +588,18 @@ test("can nest derefs", async () => {
   expect(resA).toEqual(resC);
 });
 
+test("thenable", async () => {
+  const arr = [
+    typeof (await rand.integer()),
+    typeof (await rand.integer()),
+    typeof (await rand.string()),
+    typeof (await rand.string()),
+    typeof (await rand.boolean()),
+  ];
+
+  expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
+});
+
 test("compose maps two generators together", async () => {
   const getTypeof = (...args: any[]) => {
     return args.map((arg) => typeof arg);
