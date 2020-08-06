@@ -1,3 +1,5 @@
+type Then<U> = <T extends U>(this: Random<T>, resolve: (t: T) => T) => Promise<T>;
+
 export type Seed = {
   state: number;
   increment: number;
@@ -148,16 +150,19 @@ const frequency = <T>(contexts: [number, RandomGenerator<T>][]): RandomGenerator
   };
 };
 
-export class Random<T> {
-  static return<U>(value: U | Random<U>): Random<U> {
+export class Random<T, U = T> {
+  static return<U>(value: U | Random<U>, then: Then<U>): Random<U> {
     if (!(value instanceof Random)) {
-      return new Random(constant(value));
+      return new Random(constant(value), then);
     }
 
     return value;
   }
 
-  constructor(public readonly generator: RandomGenerator<T>) {}
+  constructor(
+    public readonly generator: RandomGenerator<T>,
+    public readonly then: Then<U> = then
+  ) {}
 
   filter(fn: (t: T) => boolean, maxTries = 1e4): Random<T> {
     return new Random(async (size, seed) => {
@@ -176,7 +181,7 @@ export class Random<T> {
       }
 
       return [value, seed];
-    });
+    }, this.then);
   }
 
   map<U>(fn: (t: T) => U): Random<U> {
@@ -184,7 +189,7 @@ export class Random<T> {
       let value: T;
       [value, seed] = await this.generator(size, seed);
       return [fn(value), seed];
-    });
+    }, this.then);
   }
 
   filterMap<U>(fn: (t: T, r: RejectToken) => U | RejectToken): Random<U> {
@@ -197,7 +202,7 @@ export class Random<T> {
       [value, seed] = await this.generator(size, seed);
       const context = fn(value);
       return context.generator(size, seed);
-    });
+    }, this.then);
   }
 
   skip(count: number): Random<T> {
@@ -209,7 +214,7 @@ export class Random<T> {
       }
 
       return this.generator(size, seed);
-    });
+    }, this.then);
   }
 
   memoize(): Random<T> {
@@ -226,7 +231,7 @@ export class Random<T> {
 
         return result;
       }
-    });
+    }, this.then);
   }
 
   noEmpty(): Random<T> {
@@ -241,7 +246,7 @@ export class Random<T> {
       }
 
       return [value, seed];
-    });
+    }, this.then);
   }
 
   maybe(n = 4): Random<T | undefined> {
@@ -251,7 +256,7 @@ export class Random<T> {
       [nn - 1, this.generator],
       [1, constant(undefined)],
     ]);
-    return new Random(generator);
+    return new Random(generator, this.then);
   }
 
   nullable(n = 4): Random<T | null> {
@@ -261,11 +266,11 @@ export class Random<T> {
       [nn - 1, this.generator],
       [1, constant(null)],
     ]);
-    return new Random(generator);
+    return new Random(generator, this.then);
   }
 
   resize(maxSize: number): Random<T> {
-    return new Random(async (size, seed) => this.generator(maxSize, seed));
+    return new Random(async (size, seed) => this.generator(maxSize, seed), this.then);
   }
 
   composeMap<U, V>(u: Random<U>, fn: (t: T, u: U) => V): Random<V>;
@@ -304,7 +309,7 @@ export class Random<T> {
       const result = fn(...fnArgs);
 
       return [result, nextSeed];
-    });
+    }, this.then);
   }
 
   async *toIterator(options: Partial<RandomOptions> = {}): AsyncGenerator<T> {
@@ -318,68 +323,65 @@ export class Random<T> {
   }
 
   async sample(options: Partial<RandomOptions> = {}): Promise<[T, Seed]> {
-    let { seed = Date.now(), maxSize = 100 } = options;
+    let { seed = Math.round(Math.random() * 1e10), maxSize = 100 } = options;
     let seed_ = isSeed(seed) ? seed : initialSeed(seed);
     const [value, nextSeed] = await this.generator(maxSize, seed_);
 
     return [value, nextSeed];
   }
-
-  async then<U>(fn: (t: T) => U): Promise<U> {
-    const [next] = await this.sample();
-    return fn(next);
-  }
 }
 
 export class RandomApi {
+  constructor(private then: Then<any>) {}
+
   return<T>(value: T): Random<T> {
-    return new Random(constant(value));
+    return new Random(constant(value), this.then);
   }
 
   integer(): Random<number> {
-    return new Random(async (size, seed) => integer(-size, size, seed));
+    return new Random(async (size, seed) => integer(-size, size, seed), this.then);
   }
 
   integerWithin(min = -1e3, max = 1e3): Random<number> {
     return new Random(async (size, seed) => {
       let [value, nextSeed] = integer(min, max, seed);
       return [value, nextSeed];
-    });
+    }, this.then);
   }
 
   posInteger(): Random<number> {
-    return new Random(async (size, seed) => integer(0, size, seed));
+    return new Random(async (size, seed) => integer(0, size, seed), this.then);
   }
 
   negInteger(): Random<number> {
-    return new Random(async (size, seed) => integer(-size, 0, seed));
+    return new Random(async (size, seed) => integer(-size, 0, seed), this.then);
   }
 
   float(): Random<number> {
-    return new Random(async (size, seed) => float(-size, size, seed));
+    return new Random(async (size, seed) => float(-size, size, seed), this.then);
   }
 
   posFloat(): Random<number> {
-    return new Random(async (size, seed) => float(0, size, seed));
+    return new Random(async (size, seed) => float(0, size, seed), this.then);
   }
 
   negFloat(): Random<number> {
-    return new Random(async (size, seed) => float(-size, 0, seed));
+    return new Random(async (size, seed) => float(-size, 0, seed), this.then);
   }
 
   floatWithin(min = -1e3, max = 1e3): Random<number> {
     return new Random(async (size, seed) => {
       let [value, nextSeed] = float(min, max, seed);
       return [value, nextSeed];
-    });
+    }, this.then);
   }
 
   boolean(): Random<boolean> {
-    return new Random(boolean);
+    return new Random(boolean, this.then);
   }
 
   character(): Random<string> {
-    return new Random(async (size, seed) => integer(32, 126, seed)).map((i) =>
+    return new Random(async (size, seed) => integer(32, 126, seed), this.then).map((i) =>
       String.fromCharCode(i)
     );
   }
@@ -393,7 +395,7 @@ export class RandomApi {
   }
 
   byte(): Random<number> {
-    return new Random(byte);
+    return new Random(byte, this.then);
   }
 
   uuid(): Random<string> {
@@ -413,27 +415,27 @@ export class RandomApi {
       );
 
       return [value, nextSeed];
-    });
+    }, this.then);
   }
 
   seed(): Random<Seed> {
     return new Random(async (size, seed) => {
       const [a, b] = split(seed);
       return [a, b];
-    });
+    }, this.then);
   }
 
   array<T>(context: Random<T>): Random<T[]> {
-    return new Random(array(0, context.generator));
+    return new Random(array(0, context.generator), this.then);
   }
 
   frequency<T>(contexts: [number, Random<T>][]): Random<T> {
     const generators = contexts.map((c) => [c[0], c[1].generator] as [number, RandomGenerator<T>]);
-    return new Random(frequency(generators));
+    return new Random(frequency(generators), this.then);
   }
 
   oneOf<T>(sample: (T | Random<T>)[]): Random<T> {
-    const arr = sample.map((v) => Random.return(v));
+    const arr = sample.map((v) => Random.return(v, this.then));
 
     return this.posInteger()
       .resize(arr.length - 1)
@@ -461,7 +463,7 @@ export class RandomApi {
   ): Random<[U, V, W, X, Y, Z]>;
   tuple<U>(sample: (U | Random<U>)[]): Random<U[]>;
   tuple(sample: (any | Random<any>)[]): Random<any[]> {
-    const arr = sample.map((v) => Random.return(v));
+    const arr = sample.map((v) => Random.return(v, this.then));
 
     return new Random(async (size, seed) => {
       const value: any[] = [];
@@ -474,12 +476,12 @@ export class RandomApi {
       }
 
       return [value, seed];
-    });
+    }, this.then);
   }
 
   object<T>(obj: { [K in keyof T]: T[K] | Random<T[K]> }): Random<T> {
     const keys = Object.keys(obj) as (keyof T)[];
-    const rands = keys.map((k) => Random.return(obj[k])) as Random<T[keyof T]>[];
+    const rands = keys.map((k) => Random.return(obj[k], this.then)) as Random<T[keyof T]>[];
 
     return this.tuple(rands).map((values) =>
       keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T)
@@ -492,30 +494,24 @@ export class RandomApi {
 
   deref<T>(fn: (api: RandomApi) => Promise<T>): Random<T> {
     return new Random(async (size, seed) => {
-      const keys = Object.keys(RandomApi.prototype) as (keyof RandomApi)[];
-      const api = {} as RandomApi;
       let nextSeed = seed;
 
-      // TODO: change RandomApi instantiation to allow for `then` fn to be swapped
-      for (let key of keys) {
-        api[key] = (...args: any[]) => {
-          const result = (this as any)[key](...args);
-
-          result.then = async (fn: (arg: any) => void) => {
-            let value;
-            [value, nextSeed] = await result.sample({ seed: nextSeed, size });
-            return fn(value);
-          };
-
-          return result;
-        };
+      async function then<T>(this: Random<T>, fn: (t: T) => T): Promise<T> {
+        let value: T;
+        [value, nextSeed] = await this.sample({ seed: nextSeed, maxSize: size });
+        return fn(value);
       }
 
+      const api = new RandomApi(then);
       const result = await fn(api);
 
       return [result, nextSeed];
-    });
+    }, this.then);
   }
 }
 
-export default new RandomApi();
+function then<T>(this: Random<T>, fn: (t: T) => T): Promise<T> {
+  return this.sample().then((res) => fn(res[0]));
+}
+
+export default new RandomApi(then);

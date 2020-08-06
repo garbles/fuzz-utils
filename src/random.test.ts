@@ -523,6 +523,17 @@ test("lazy evaluate code in a closure", async () => {
   expect(b).toEqual([1]);
 });
 
+test("is awaitable", async () => {
+  const gen = rand.integer();
+
+  const resA = await gen;
+  const resB = await gen;
+
+  expect(resA).not.toEqual(resB);
+  expect(typeof resA).toEqual("number");
+  expect(typeof resB).toEqual("number");
+});
+
 test("derefences generators to functions", async () => {
   const gen = rand.deref(async (api) => {
     return [
@@ -537,6 +548,44 @@ test("derefences generators to functions", async () => {
   const [arr] = await gen.sample();
 
   expect(arr).toEqual(["number", "number", "string", "string", "boolean"]);
+});
+
+test("dereferences deterministically", async () => {
+  const gen = rand.deref(async (api) => {
+    return [
+      await api.integer(),
+      await api.integer(),
+      await api.string(),
+      await api.string(),
+      await api.boolean(),
+    ];
+  });
+
+  const [seed] = await rand.seed().sample();
+  const [resA] = await gen.sample({ seed });
+  const [resB] = await gen.sample({ seed });
+  const [resC] = await gen.sample({ seed });
+
+  expect(resA).toEqual(resB);
+  expect(resA).toEqual(resC);
+});
+
+test("can nest derefs", async () => {
+  const gen = rand.deref(async (api) => {
+    const nested = await api.deref(async (api2) => {
+      return (await api2.integer()) + (await api2.integer());
+    });
+
+    return nested + (await api.integer());
+  });
+
+  const [seed] = await rand.seed().sample();
+  const [resA] = await gen.sample({ seed });
+  const [resB] = await gen.sample({ seed });
+  const [resC] = await gen.sample({ seed });
+
+  expect(resA).toEqual(resB);
+  expect(resA).toEqual(resC);
 });
 
 test("compose maps two generators together", async () => {
