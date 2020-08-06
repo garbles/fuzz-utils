@@ -755,3 +755,17 @@ it("can map values to functions", () => {
     expect(typeof child()).toBe("string");
   });
 });
+
+it("runs tests", async () => {
+  // this will always fail because it will quickly run into a short string
+  const result = await fuzz.string().run((value) => {
+    expect(value.length).toBeGreaterThan(5);
+  });
+
+  // the run failed
+  expect(result.failure.length).toBeGreaterThan(0);
+
+  // the first failing case was a string with less than 5 characters
+  const failure = result.failure[0];
+  expect(failure.data.args.length).toBeLessThan(5);
+});

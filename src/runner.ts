@@ -1,5 +1,5 @@
 import { Fuzz, RoseTree } from "./fuzz";
-import { RandomOptions, Random } from "./random";
+import { RandomOptions } from "./random";
 
 type CompleteEvent = {
   type: "complete";
@@ -28,7 +28,7 @@ type FailureEvent<T> = {
 
 type RunnerEvent<T> = SuccessEvent<T> | FailureEvent<T> | CompleteEvent;
 
-type Report<T> = {
+export type RunnerReport<T> = {
   success: SuccessEvent<T>[];
   failure: FailureEvent<T>[];
   completed: boolean;
@@ -42,7 +42,7 @@ type TestRun<T> = {
 export class Runner<T, U> {
   constructor(private fuzzer: Fuzz<T, U>, private options: Partial<RandomOptions> = {}) {}
 
-  async exec(cb: (u: U) => any): Promise<Report<U>> {
+  async exec(cb: (u: U) => any): Promise<RunnerReport<U>> {
     const toTestRun = (args: U): TestRun<U> => {
       return {
         args,
@@ -54,7 +54,7 @@ export class Runner<T, U> {
 
     const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toIterator(this.options);
 
-    const report: Report<U> = {
+    const report: RunnerReport<U> = {
       success: [],
       failure: [],
       completed: false,
