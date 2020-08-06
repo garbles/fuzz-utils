@@ -505,7 +505,7 @@ test("generates maybe values", async () => {
     .integer()
     .maybe(6)
     .toRandomRoseTree()
-    .toIterator({ seed: Date.now(), maxSize: 10 });
+    .toAsyncGenerator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 6;
 
   let results: Results<unknown>[] = [];
@@ -525,7 +525,7 @@ test("generates nullable values", async () => {
     .integer()
     .nullable(4)
     .toRandomRoseTree()
-    .toIterator({ seed: Date.now(), maxSize: 10 });
+    .toAsyncGenerator({ seed: Date.now(), maxSize: 10 });
   const expected = 1e3 / 4;
 
   let results: Results<unknown>[] = [];
@@ -546,7 +546,7 @@ test("can resize the fuzzer", async () => {
     .map((i) => i.toString())
     .resize(10)
     .toRandomRoseTree()
-    .toIterator({ maxSize: 1e4 });
+    .toAsyncGenerator({ maxSize: 1e4 });
 
   for await (let rose of take(roses, 1)) {
     expect(parseInt(rose.value(), 10)).toBeLessThanOrEqual(10);
@@ -581,7 +581,7 @@ test("creates a frequency fuzzer", async () => {
 
   let results: string[] = [];
 
-  for await (const next of take(fuzzer.toRandomRoseTree().toIterator(), count)) {
+  for await (const next of take(fuzzer.toRandomRoseTree().toAsyncGenerator(), count)) {
     results.push(next.value());
   }
 
@@ -604,7 +604,7 @@ test("generates an unbiased oneOf fuzzer", async () => {
 
   let results: string[] = [];
 
-  for await (const next of take(fuzzer.toRandomRoseTree().toIterator(), count)) {
+  for await (const next of take(fuzzer.toRandomRoseTree().toAsyncGenerator(), count)) {
     results.push(next.value());
   }
 
@@ -624,7 +624,10 @@ describe("biases values toward extremes", () => {
 
       let results: number[] = [];
 
-      for await (const next of take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count)) {
+      for await (const next of take(
+        fuzzer.toRandomRoseTree().toAsyncGenerator({ maxSize }),
+        count
+      )) {
         results.push(next.value());
       }
 
@@ -653,7 +656,10 @@ describe("biases values toward extremes", () => {
 
       const results: string[] = [];
 
-      for await (const next of take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count)) {
+      for await (const next of take(
+        fuzzer.toRandomRoseTree().toAsyncGenerator({ maxSize }),
+        count
+      )) {
         results.push(next.value());
       }
 
@@ -681,7 +687,10 @@ describe("biases values toward extremes", () => {
 
       const results: number[][] = [];
 
-      for await (const next of take(fuzzer.toRandomRoseTree().toIterator({ maxSize }), count)) {
+      for await (const next of take(
+        fuzzer.toRandomRoseTree().toAsyncGenerator({ maxSize }),
+        count
+      )) {
         results.push(next.value());
       }
 

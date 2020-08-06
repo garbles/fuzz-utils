@@ -151,12 +151,12 @@ const frequency = <T>(contexts: [number, RandomGenerator<T>][]): RandomGenerator
 };
 
 export class Random<T, U = T> {
-  static return<U>(value: U | Random<U>, then: Then<U>): Random<U> {
-    if (!(value instanceof Random)) {
-      return new Random(constant(value), then);
+  static return<U>(value: U, then: Then<U>): Random<U> {
+    if (value instanceof Random) {
+      return new Random(value.generator, then);
     }
 
-    return value;
+    return new Random(constant(value), then);
   }
 
   constructor(
@@ -312,7 +312,7 @@ export class Random<T, U = T> {
     }, this.then);
   }
 
-  async *toIterator(options: Partial<RandomOptions> = {}): AsyncGenerator<T> {
+  async *toAsyncGenerator(options: Partial<RandomOptions> = {}): AsyncGenerator<T> {
     let { seed, maxSize } = options;
 
     while (true) {
@@ -332,56 +332,56 @@ export class Random<T, U = T> {
 }
 
 export class RandomApi {
-  constructor(private then: Then<any>) {}
+  constructor(private _then: Then<any>) {}
 
   return<T>(value: T): Random<T> {
-    return new Random(constant(value), this.then);
+    return new Random(constant(value), this._then);
   }
 
   integer(): Random<number> {
-    return new Random(async (size, seed) => integer(-size, size, seed), this.then);
+    return new Random(async (size, seed) => integer(-size, size, seed), this._then);
   }
 
   integerWithin(min = -1e3, max = 1e3): Random<number> {
     return new Random(async (size, seed) => {
       let [value, nextSeed] = integer(min, max, seed);
       return [value, nextSeed];
-    }, this.then);
+    }, this._then);
   }
 
   posInteger(): Random<number> {
-    return new Random(async (size, seed) => integer(0, size, seed), this.then);
+    return new Random(async (size, seed) => integer(0, size, seed), this._then);
   }
 
   negInteger(): Random<number> {
-    return new Random(async (size, seed) => integer(-size, 0, seed), this.then);
+    return new Random(async (size, seed) => integer(-size, 0, seed), this._then);
   }
 
   float(): Random<number> {
-    return new Random(async (size, seed) => float(-size, size, seed), this.then);
+    return new Random(async (size, seed) => float(-size, size, seed), this._then);
   }
 
   posFloat(): Random<number> {
-    return new Random(async (size, seed) => float(0, size, seed), this.then);
+    return new Random(async (size, seed) => float(0, size, seed), this._then);
   }
 
   negFloat(): Random<number> {
-    return new Random(async (size, seed) => float(-size, 0, seed), this.then);
+    return new Random(async (size, seed) => float(-size, 0, seed), this._then);
   }
 
   floatWithin(min = -1e3, max = 1e3): Random<number> {
     return new Random(async (size, seed) => {
       let [value, nextSeed] = float(min, max, seed);
       return [value, nextSeed];
-    }, this.then);
+    }, this._then);
   }
 
   boolean(): Random<boolean> {
-    return new Random(boolean, this.then);
+    return new Random(boolean, this._then);
   }
 
   character(): Random<string> {
-    return new Random(async (size, seed) => integer(32, 126, seed), this.then).map((i) =>
+    return new Random(async (size, seed) => integer(32, 126, seed), this._then).map((i) =>
       String.fromCharCode(i)
     );
   }
@@ -395,7 +395,7 @@ export class RandomApi {
   }
 
   byte(): Random<number> {
-    return new Random(byte, this.then);
+    return new Random(byte, this._then);
   }
 
   uuid(): Random<string> {
@@ -415,27 +415,27 @@ export class RandomApi {
       );
 
       return [value, nextSeed];
-    }, this.then);
+    }, this._then);
   }
 
   seed(): Random<Seed> {
     return new Random(async (size, seed) => {
       const [a, b] = split(seed);
       return [a, b];
-    }, this.then);
+    }, this._then);
   }
 
   array<T>(context: Random<T>): Random<T[]> {
-    return new Random(array(0, context.generator), this.then);
+    return new Random(array(0, context.generator), this._then);
   }
 
   frequency<T>(contexts: [number, Random<T>][]): Random<T> {
     const generators = contexts.map((c) => [c[0], c[1].generator] as [number, RandomGenerator<T>]);
-    return new Random(frequency(generators), this.then);
+    return new Random(frequency(generators), this._then);
   }
 
   oneOf<T>(sample: (T | Random<T>)[]): Random<T> {
-    const arr = sample.map((v) => Random.return(v, this.then));
+    const arr = sample.map((v) => Random.return(v, this._then));
 
     return this.posInteger()
       .resize(arr.length - 1)
@@ -463,7 +463,7 @@ export class RandomApi {
   ): Random<[U, V, W, X, Y, Z]>;
   tuple<U>(sample: (U | Random<U>)[]): Random<U[]>;
   tuple(sample: (any | Random<any>)[]): Random<any[]> {
-    const arr = sample.map((v) => Random.return(v, this.then));
+    const arr = sample.map((v) => Random.return(v, this._then));
 
     return new Random(async (size, seed) => {
       const value: any[] = [];
@@ -476,12 +476,12 @@ export class RandomApi {
       }
 
       return [value, seed];
-    }, this.then);
+    }, this._then);
   }
 
   object<T>(obj: { [K in keyof T]: T[K] | Random<T[K]> }): Random<T> {
     const keys = Object.keys(obj) as (keyof T)[];
-    const rands = keys.map((k) => Random.return(obj[k], this.then)) as Random<T[keyof T]>[];
+    const rands = keys.map((k) => Random.return(obj[k], this._then)) as Random<T[keyof T]>[];
 
     return this.tuple(rands).map((values) =>
       keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T)
@@ -506,7 +506,7 @@ export class RandomApi {
       const result = await fn(api);
 
       return [result, nextSeed];
-    }, this.then);
+    }, this._then);
   }
 }
 

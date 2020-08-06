@@ -105,7 +105,7 @@ test("creates a list of integers where all numbers are greater than 5", async ()
 });
 
 test("create integers within a range", async () => {
-  for await (let value of take(rand.integerWithin(3, 7).toIterator(), 50)) {
+  for await (let value of take(rand.integerWithin(3, 7).toAsyncGenerator(), 50)) {
     expect(value).toBeGreaterThanOrEqual(3);
     expect(value).toBeLessThanOrEqual(7);
   }
@@ -188,7 +188,7 @@ test("does not adopt the binding of the other generator", async () => {
     .posInteger()
     .resize(100)
     .bind((v) => rand.array(rand.return(v)).resize(5).noEmpty())
-    .toIterator();
+    .toAsyncGenerator();
 
   for await (let arr of take(arrs, 50)) {
     expect(arr.length).toBeLessThanOrEqual(5);
@@ -368,7 +368,7 @@ test("creates a tuple from other generators", async () => {
 });
 
 test("generates a list of values", async () => {
-  const numbers = rand.integer().toIterator({ seed: 1e5 });
+  const numbers = rand.integer().toAsyncGenerator({ seed: 1e5 });
 
   for await (let n of take(numbers, 50)) {
     expect(typeof n).toEqual("number");
@@ -376,9 +376,9 @@ test("generates a list of values", async () => {
 });
 
 test("generates non empty values", async () => {
-  const numbers = rand.integer().noEmpty().toIterator({ seed: 1e5 });
+  const numbers = rand.integer().noEmpty().toAsyncGenerator({ seed: 1e5 });
 
-  const array = rand.array(rand.integer()).noEmpty().toIterator({ seed: 1e5 });
+  const array = rand.array(rand.integer()).noEmpty().toAsyncGenerator({ seed: 1e5 });
 
   for await (let n of take(numbers, 50)) {
     expect(n).not.toEqual(0);
@@ -390,7 +390,7 @@ test("generates non empty values", async () => {
 });
 
 test("generates nullable values", async () => {
-  const numbers = rand.integer().nullable(4).toIterator({ seed: Date.now() });
+  const numbers = rand.integer().nullable(4).toAsyncGenerator({ seed: Date.now() });
   const expected = 1000 / 4;
 
   let nulls = 0;
@@ -406,7 +406,7 @@ test("generates nullable values", async () => {
 });
 
 test("generates maybe values", async () => {
-  const numbers = rand.integer().maybe(5).toIterator({ seed: Date.now() });
+  const numbers = rand.integer().maybe(5).toAsyncGenerator({ seed: Date.now() });
   const expected = 1000 / 5;
 
   let undef = 0;
@@ -426,7 +426,7 @@ test("resizes generators", async () => {
     .posInteger()
     .resize(10)
     .map((i) => i.toString())
-    .toIterator();
+    .toAsyncGenerator();
 
   for await (let str of take(strings, 50)) {
     expect(parseInt(str, 10)).toBeLessThanOrEqual(10);
@@ -485,7 +485,7 @@ test("generates an unbiased integer within a range", async () => {
   const count = 1e3;
   const arr = [];
 
-  for await (let next of take(rand.integerWithin(0, 4).toIterator(), count)) {
+  for await (let next of take(rand.integerWithin(0, 4).toAsyncGenerator(), count)) {
     arr.push(next);
   }
 
