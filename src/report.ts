@@ -3,13 +3,11 @@ type FailureCase<T> = {
   error: Error;
 };
 
-type LinkedList<T> = [T, LinkedList<T>] | [];
-
 export class Report<T> {
-  private list: LinkedList<FailureCase<T>> = [];
+  private list: FailureCase<T>[] = [];
 
   addFailure(data: FailureCase<T>) {
-    this.list = [data, this.list];
+    this.list.unshift(data);
   }
 
   get success() {
