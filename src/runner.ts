@@ -15,7 +15,7 @@ type SuccessEvent<T> = {
   data: SuccessData<T>;
 };
 
-type FailData<T> = {
+type FailureData<T> = {
   args: T;
   error: Error;
   depth: number;
@@ -23,15 +23,34 @@ type FailData<T> = {
 
 type FailureEvent<T> = {
   type: "failure";
-  data: FailData<T>;
+  data: FailureData<T>;
 };
 
 type RunnerEvent<T> = SuccessEvent<T> | FailureEvent<T> | CompleteEvent;
 
-type Report<T> = {
-  success: SuccessEvent<T>[];
-  failure: FailureEvent<T>[];
-};
+class Report<T> {
+  private _success: SuccessData<T>[] = [];
+  private _failure: FailureData<T>[] = [];
+  private _isSuccess = true;
+
+  addSuccess(data: SuccessData<T>) {
+    this._success.push(data);
+  }
+
+  addFailure(data: FailureData<T>) {
+    this._failure.push(data);
+    this._isSuccess = false;
+  }
+
+  get isSuccess() {
+    return this._isSuccess;
+  }
+
+  getSmallestFailure(): FailureData<T> | void {
+    const [failure] = this._failure.slice(-1);
+    return failure;
+  }
+}
 
 type Run<T> = {
   args: T;
@@ -66,18 +85,15 @@ export class Runner<T extends any[]> {
 
     const iter = this.fuzzer.map(toRun).toRandomRoseTree().toGenerator(options);
 
-    const report: Report<T> = {
-      success: [],
-      failure: [],
-    };
+    const report = new Report<T>();
 
     for await (let event of this.toEventIterator(iter)) {
       switch (event.type) {
         case "success":
-          report.success.push(event);
+          report.addSuccess(event.data);
           continue;
         case "failure":
-          report.failure.push(event);
+          report.addFailure(event.data);
           continue;
         case "complete":
           break;

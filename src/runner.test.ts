@@ -17,12 +17,13 @@ it("runs tests", async () => {
     { count: 50 }
   );
 
-  // the run failed
-  expect(result.failure.length).toBeGreaterThan(0);
+  const failure = result.getSmallestFailure();
 
-  // the first failing case was a string with less than 5 characters
-  const failure = result.failure[0];
-  expect(failure.data.args.length).toBeLessThan(5);
+  if (failure) {
+    expect(failure.args.length).toBeLessThan(5);
+  } else {
+    expect(false).toBeTruthy(); // guard
+  }
 });
 
 it("can be used as a runner", () => runner.run((value) => expect(value.length).toBeGreaterThanOrEqual(5)));
