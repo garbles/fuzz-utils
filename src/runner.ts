@@ -31,7 +31,6 @@ type RunnerEvent<T> = SuccessEvent<T> | FailureEvent<T> | CompleteEvent;
 type Report<T> = {
   success: SuccessEvent<T>[];
   failure: FailureEvent<T>[];
-  completed: boolean;
 };
 
 type Run<T> = {
@@ -70,7 +69,6 @@ export class Runner<T extends any[]> {
     const report: Report<T> = {
       success: [],
       failure: [],
-      completed: false,
     };
 
     for await (let event of this.toEventIterator(iter)) {
@@ -82,8 +80,7 @@ export class Runner<T extends any[]> {
           report.failure.push(event);
           continue;
         case "complete":
-          report.completed = true;
-          return report;
+          break;
       }
     }
 

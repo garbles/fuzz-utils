@@ -390,10 +390,6 @@ export class Fuzz<T, U> {
       return [rose, seed3];
     });
   }
-
-  toRunner(): Runner<U> {
-    return new Runner(this);
-  }
 }
 
 export class FuzzApi {
