@@ -4,17 +4,17 @@ type FailureCase<T> = {
 };
 
 export class Report<T> {
-  private list: FailureCase<T>[] = [];
+  public failures: FailureCase<T>[] = [];
 
   addFailure(data: FailureCase<T>) {
-    this.list.unshift(data);
+    this.failures.unshift(data);
   }
 
   get success() {
-    return this.list.length === 0;
+    return this.failures.length === 0;
   }
 
   get smallestFailure(): FailureCase<T> | void {
-    return this.list[0];
+    return this.failures[0];
   }
 }
