@@ -74,7 +74,7 @@ export class Runner<T extends any[]> {
       try {
         await run.exec();
       } catch (error) {
-        const event: FailureEvent<T> = {
+        const failure: FailureEvent<T> = {
           type: "failure",
           data: {
             args: run.args,
@@ -83,7 +83,7 @@ export class Runner<T extends any[]> {
           },
         };
 
-        yield event;
+        yield failure;
 
         const next = rose.children();
         yield* this.toEventIterator(next, depth + 1);
