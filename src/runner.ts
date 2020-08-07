@@ -52,7 +52,7 @@ export class Runner<T, U> {
       };
     };
 
-    const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toIterator(this.options);
+    const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toGenerator(this.options);
 
     const report: RunnerReport<U> = {
       success: [],

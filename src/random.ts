@@ -308,7 +308,7 @@ export class Random<T> {
     });
   }
 
-  *toIterator(options: Partial<RandomOptions> = {}): Generator<T> {
+  *toGenerator(options: Partial<RandomOptions> = {}): Generator<T> {
     let { seed, maxSize } = options;
 
     while (true) {
