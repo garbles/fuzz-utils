@@ -1,15 +1,17 @@
+type NextState<T> = [T, Seed];
+type RandomGenerator<T> = (size: number, seed: Seed) => NextState<T>;
+
 export type Seed = {
   state: number;
   increment: number;
 };
 
-export type NextState<T> = [T, Seed];
-export type RandomGenerator<T> = (size: number, seed: Seed) => NextState<T>;
-
-export type RandomOptions = {
+type SampleOptions = {
   seed: number | Seed;
   maxSize: number;
 };
+
+export type ToGeneratorOptions = SampleOptions & { count: number };
 
 type RejectToken = { "__@FUZZ_UTILS/RANDOM__REJECT_TOKEN__": true };
 const REJECT: RejectToken = { "__@FUZZ_UTILS/RANDOM__REJECT_TOKEN__": true };
@@ -308,17 +310,18 @@ export class Random<T> {
     });
   }
 
-  *toGenerator(options: Partial<RandomOptions> = {}): Generator<T> {
-    let { seed, maxSize } = options;
+  *toGenerator(options: Partial<ToGeneratorOptions> = {}): Generator<T> {
+    let { seed, maxSize, count: maxLength = Infinity } = options;
+    let currentLength = 0;
 
-    while (true) {
+    while (currentLength++ < maxLength) {
       let next: T;
       [next, seed] = this.sample({ seed, maxSize });
       yield next;
     }
   }
 
-  sample(options: Partial<RandomOptions> = {}): [T, Seed] {
+  sample(options: Partial<SampleOptions> = {}): [T, Seed] {
     let { seed = Date.now(), maxSize = 100 } = options;
     let seed_ = isSeed(seed) ? seed : initialSeed(seed);
     const [value, nextSeed] = this.generator(maxSize, seed_);

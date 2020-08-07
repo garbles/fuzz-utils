@@ -6,9 +6,12 @@ it("runs tests", async () => {
   const runner = new Runner(fuzzer);
 
   // this will always fail because it will quickly run into a short string
-  const result = await runner.run((value) => {
-    expect(value.length).toBeGreaterThan(5);
-  });
+  const result = await runner.run(
+    (value) => {
+      expect(value.length).toBeGreaterThan(5);
+    },
+    { count: 50 }
+  );
 
   // the run failed
   expect(result.failure.length).toBeGreaterThan(0);

@@ -1,5 +1,5 @@
 import { Fuzz, RoseTree } from "./fuzz";
-import { RandomOptions } from "./random";
+import { ToGeneratorOptions } from "./random";
 
 type CompleteEvent = {
   type: "complete";
@@ -28,39 +28,39 @@ type FailureEvent<T> = {
 
 type RunnerEvent<T> = SuccessEvent<T> | FailureEvent<T> | CompleteEvent;
 
-export type RunnerReport<T> = {
+export type Report<T> = {
   success: SuccessEvent<T>[];
   failure: FailureEvent<T>[];
   completed: boolean;
 };
 
-type TestRun<T> = {
+type Run<T> = {
   args: T;
-  run(): any;
+  exec(): any;
 };
 
 export class Runner<T, U> {
   constructor(private fuzzer: Fuzz<T, U>) {}
 
-  async run(cb: (u: U) => any, options: Partial<RandomOptions> = {}): Promise<RunnerReport<U>> {
-    const toTestRun = (args: U): TestRun<U> => {
+  async run(cb: (u: U) => any, options: Partial<ToGeneratorOptions> = {}): Promise<Report<U>> {
+    const toRun = (args: U): Run<U> => {
       return {
         args,
-        run() {
+        exec() {
           return cb.call(null, args);
         },
       };
     };
 
-    const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toGenerator(options);
+    const iter = this.fuzzer.map(toRun).toRandomRoseTree().toGenerator(options);
 
-    const report: RunnerReport<U> = {
+    const report: Report<U> = {
       success: [],
       failure: [],
       completed: false,
     };
 
-    for await (let event of this.toEventIterator(iter, 0)) {
+    for await (let event of this.toEventIterator(iter)) {
       switch (event.type) {
         case "success":
           report.success.push(event);
@@ -78,15 +78,15 @@ export class Runner<T, U> {
   }
 
   private async *toEventIterator(
-    iter: Generator<RoseTree<T, TestRun<U>>, any, unknown>,
+    iter: Generator<RoseTree<T, Run<U>>, any, unknown>,
     depth = 0
   ): AsyncGenerator<RunnerEvent<U>, any, unknown> {
     for (let rose of iter) {
-      const test = rose.value();
+      const run = rose.value();
       let error: Error | null = null;
 
       try {
-        await test.run();
+        await run.exec();
       } catch (next) {
         error = next;
       }
@@ -95,7 +95,7 @@ export class Runner<T, U> {
         const event: SuccessEvent<U> = {
           type: "success",
           data: {
-            args: test.args,
+            args: run.args,
             depth,
           },
         };
@@ -105,7 +105,7 @@ export class Runner<T, U> {
         const event: FailureEvent<U> = {
           type: "failure",
           data: {
-            args: test.args,
+            args: run.args,
             depth,
             error,
           },

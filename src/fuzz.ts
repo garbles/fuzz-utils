@@ -1,6 +1,6 @@
-import rand, { Random, Seed, RandomOptions } from "./random";
+import rand, { Random, Seed } from "./random";
 import sh, { Shrink } from "./shrink";
-import { Runner, RunnerReport } from "./runner";
+import { Runner } from "./runner";
 
 export type Filter = { __FILTER__: true };
 

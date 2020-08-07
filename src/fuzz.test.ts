@@ -11,21 +11,6 @@ type Results<T> = {
   };
 };
 
-const take = <T>(gen: Generator<T>, total: number): T[] => {
-  let result: T[] = Array(total);
-  let i = 0;
-
-  for (let t of gen) {
-    result[i] = t;
-    i++;
-    if (i >= total) {
-      break;
-    }
-  }
-
-  return result;
-};
-
 const extract = <T>(rose: RoseTree<any, T>): Results<T> => {
   let children: RoseTree<any, T>[] = [];
 
@@ -508,10 +493,10 @@ test("generates maybe values", () => {
     .integer()
     .maybe(6)
     .toRandomRoseTree()
-    .toGenerator({ seed: Date.now(), maxSize: 10 });
+    .toGenerator({ seed: Date.now(), maxSize: 10, count: 1e3 });
   const expected = 1e3 / 6;
 
-  const results = take(roses, 1e3).map(extract);
+  const results = [...roses].map(extract);
   const undef = results.filter((r) => r.value === undefined).length;
 
   expect(undef).toBeGreaterThan(expected * 0.8);
@@ -523,10 +508,10 @@ test("generates nullable values", () => {
     .integer()
     .nullable(4)
     .toRandomRoseTree()
-    .toGenerator({ seed: Date.now(), maxSize: 10 });
+    .toGenerator({ seed: Date.now(), maxSize: 10, count: 1e3 });
   const expected = 1e3 / 4;
 
-  const results = take(roses, 1e3).map(extract);
+  const results = [...roses].map(extract);
   const nulls = results.filter((r) => r.value === null).length;
 
   expect(nulls).toBeGreaterThan(expected * 0.8);
@@ -539,9 +524,9 @@ test("can resize the fuzzer", () => {
     .map((i) => i.toString())
     .resize(10)
     .toRandomRoseTree()
-    .toGenerator({ maxSize: 1e4 });
+    .toGenerator({ maxSize: 1e4, count: 1 });
 
-  for (let rose of take(roses, 1)) {
+  for (let rose of roses) {
     expect(parseInt(rose.value(), 10)).toBeLessThanOrEqual(10);
   }
 });
@@ -572,7 +557,8 @@ test("creates a frequency fuzzer", () => {
     [3, fuzz.return("c")],
   ]);
 
-  const values = take(fuzzer.toRandomRoseTree().toGenerator(), count).map((rose) => rose.value());
+  const gen = fuzzer.toRandomRoseTree().toGenerator({ count });
+  const values = [...gen].map((rose) => rose.value());
 
   const expectedA = count / 9;
   const expectedB = (count * 5) / 9;
@@ -590,7 +576,8 @@ test("creates a frequency fuzzer", () => {
 test("generates an unbiased oneOf fuzzer", () => {
   const count = 1e3;
   const fuzzer = fuzz.oneOf([fuzz.return("a"), fuzz.return("b"), fuzz.return("c")]);
-  const values = take(fuzzer.toRandomRoseTree().toGenerator(), count).map((rose) => rose.value());
+  const gen = fuzzer.toRandomRoseTree().toGenerator({ count });
+  const values = [...gen].map((rose) => rose.value());
 
   const as = values.filter((v) => v === "a").length;
   const bs = values.filter((v) => v === "b").length;
@@ -605,9 +592,8 @@ describe("biases values toward extremes", () => {
   describe("numbers", () => {
     const checker = (maxSize: number, zeroProb: number, minProb: number, maxProb: number) => {
       const fuzzer = fuzz.integer();
-      const values = take(fuzzer.toRandomRoseTree().toGenerator({ maxSize }), count).map((rose) =>
-        rose.value()
-      );
+      const gen = fuzzer.toRandomRoseTree().toGenerator({ maxSize, count });
+      const values = [...gen].map((rose) => rose.value());
 
       const zeros = values.filter((v) => v === 0).length;
       const min = values.filter((v) => v === -maxSize).length;
@@ -626,9 +612,8 @@ describe("biases values toward extremes", () => {
   describe("strings", () => {
     const checker = (maxSize: number, zeroProb: number, shortProb: number, longProb: number) => {
       const fuzzer = fuzz.string();
-      const values = take(fuzzer.toRandomRoseTree().toGenerator({ maxSize }), count).map((rose) =>
-        rose.value()
-      );
+      const gen = fuzzer.toRandomRoseTree().toGenerator({ maxSize, count });
+      const values = [...gen].map((rose) => rose.value());
 
       const zeros = values.filter((v) => v.length === 0).length;
       const shorts = values.filter((v) => v.length <= 10 && v.length > 0).length;
@@ -651,9 +636,8 @@ describe("biases values toward extremes", () => {
   describe("arrays", () => {
     const checker = (maxSize: number, zeroProb: number) => {
       const fuzzer = fuzz.array(fuzz.return(0));
-      const values = take(fuzzer.toRandomRoseTree().toGenerator({ maxSize }), count).map((rose) =>
-        rose.value()
-      );
+      const gen = fuzzer.toRandomRoseTree().toGenerator({ maxSize, count });
+      const values = [...gen].map((rose) => rose.value());
 
       const zeros = values.filter((v) => v.length === 0).length;
       expectWithin25Percent(zeros, count * zeroProb);
