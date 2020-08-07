@@ -5,16 +5,6 @@ type CompleteEvent = {
   type: "complete";
 };
 
-type SuccessData<T> = {
-  args: T;
-  depth: number;
-};
-
-type SuccessEvent<T> = {
-  type: "success";
-  data: SuccessData<T>;
-};
-
 type FailureData<T> = {
   args: T;
   error: Error;
@@ -26,16 +16,11 @@ type FailureEvent<T> = {
   data: FailureData<T>;
 };
 
-type RunnerEvent<T> = SuccessEvent<T> | FailureEvent<T> | CompleteEvent;
+type RunnerEvent<T> = FailureEvent<T> | CompleteEvent;
 
 class Report<T> {
-  private _success: SuccessData<T>[] = [];
   private _failure: FailureData<T>[] = [];
   private _isSuccess = true;
-
-  addSuccess(data: SuccessData<T>) {
-    this._success.push(data);
-  }
 
   addFailure(data: FailureData<T>) {
     this._failure.push(data);
@@ -89,9 +74,6 @@ export class Runner<T extends any[]> {
 
     for await (let event of this.toEventIterator(iter)) {
       switch (event.type) {
-        case "success":
-          report.addSuccess(event.data);
-          continue;
         case "failure":
           report.addFailure(event.data);
           continue;
@@ -106,25 +88,10 @@ export class Runner<T extends any[]> {
   private async *toEventIterator(iter: Generator<RoseTree<any, Run<T>>>, depth = 0): AsyncGenerator<RunnerEvent<T>> {
     for (let rose of iter) {
       const run = rose.value();
-      let error: Error | null = null;
 
       try {
         await run.exec();
-      } catch (next) {
-        error = next;
-      }
-
-      if (error === null) {
-        const event: SuccessEvent<T> = {
-          type: "success",
-          data: {
-            args: run.args,
-            depth,
-          },
-        };
-
-        yield event;
-      } else {
+      } catch (error) {
         const event: FailureEvent<T> = {
           type: "failure",
           data: {
