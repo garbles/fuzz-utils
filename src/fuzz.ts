@@ -410,9 +410,8 @@ export class Fuzz<T, U> {
     });
   }
 
-  run(cb: (u: U) => void, options: Partial<RandomOptions> = {}): Promise<RunnerReport<U>> {
-    const runner = new Runner(this, options);
-    return runner.exec(cb);
+  toRunner(): Runner<T, U> {
+    return new Runner(this);
   }
 }
 

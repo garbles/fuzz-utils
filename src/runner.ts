@@ -40,9 +40,9 @@ type TestRun<T> = {
 };
 
 export class Runner<T, U> {
-  constructor(private fuzzer: Fuzz<T, U>, private options: Partial<RandomOptions> = {}) {}
+  constructor(private fuzzer: Fuzz<T, U>) {}
 
-  async exec(cb: (u: U) => any): Promise<RunnerReport<U>> {
+  async run(cb: (u: U) => any, options: Partial<RandomOptions> = {}): Promise<RunnerReport<U>> {
     const toTestRun = (args: U): TestRun<U> => {
       return {
         args,
@@ -52,7 +52,7 @@ export class Runner<T, U> {
       };
     };
 
-    const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toGenerator(this.options);
+    const iter = this.fuzzer.map(toTestRun).toRandomRoseTree().toGenerator(options);
 
     const report: RunnerReport<U> = {
       success: [],
