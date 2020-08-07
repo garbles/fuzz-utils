@@ -4,22 +4,14 @@ import { Runner } from "./runner";
 
 export type Filter = { __FILTER__: true };
 
-export type RandomGenerator<T, U> = (
-  size: number,
-  seed: Seed
-) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
+export type RandomGenerator<T, U> = (size: number, seed: Seed) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
 
 const FILTER: Filter = { __FILTER__: true };
 
-const isObject = (obj: any): obj is object =>
-  Object.prototype.toString.call(obj) === "[object Object]";
+const isObject = (obj: any): obj is object => Object.prototype.toString.call(obj) === "[object Object]";
 const isFilter = (obj: any): obj is Filter => isObject(obj) && "__FILTER__" in obj;
 
-const biasedRandomNumber = (
-  isPositive: boolean,
-  isNegative: boolean,
-  isInteger: boolean
-): Random<number> => {
+const biasedRandomNumber = (isPositive: boolean, isNegative: boolean, isInteger: boolean): Random<number> => {
   const posNumber = isInteger ? rand.posInteger().noEmpty() : rand.posFloat().noEmpty();
   const negNumber = isInteger ? rand.negInteger().noEmpty() : rand.negFloat().noEmpty();
   const number = isInteger ? rand.integer().noEmpty() : rand.float().noEmpty();
@@ -89,11 +81,7 @@ const biasedRandomString = (): Random<string> =>
   });
 
 export class RoseTree<T, U> {
-  constructor(
-    private pair: [T, U],
-    private shrink: Shrink<T, T>,
-    private filterMap: FilterMap<T, U>
-  ) {}
+  constructor(private pair: [T, U], private shrink: Shrink<T, T>, private filterMap: FilterMap<T, U>) {}
 
   public value(): U {
     return this.pair[1];
@@ -125,14 +113,7 @@ class FilterMap<T, U> {
     arr: [FilterMap<A, B>, FilterMap<C, D>, FilterMap<E, F>, FilterMap<G, H>, FilterMap<I, J>]
   ): FilterMap<[A, C, E, G, I], [B, D, F, H, J]>;
   static tuple<A, B, C, D, E, F, G, H, I, J, K, L>(
-    arr: [
-      FilterMap<A, B>,
-      FilterMap<C, D>,
-      FilterMap<E, F>,
-      FilterMap<G, H>,
-      FilterMap<I, J>,
-      FilterMap<K, L>
-    ]
+    arr: [FilterMap<A, B>, FilterMap<C, D>, FilterMap<E, F>, FilterMap<G, H>, FilterMap<I, J>, FilterMap<K, L>]
   ): FilterMap<[A, C, E, G, I, K], [B, D, F, H, J, L]>;
   static tuple<T, U>(arr: FilterMap<T, U>[]): FilterMap<T[], U[]>;
   static tuple(filterMaps: FilterMap<any, any>[]): FilterMap<any, any> {
@@ -410,7 +391,7 @@ export class Fuzz<T, U> {
     });
   }
 
-  toRunner(): Runner<T, U> {
+  toRunner(): Runner<U> {
     return new Runner(this);
   }
 }
@@ -463,12 +444,7 @@ export class FuzzApi {
    * @param maxSize The maximum value
    */
   integerWithin(minSize: number, maxSize: number): Fuzz<number, number> {
-    const pivot =
-      maxSize - minSize > maxSize || maxSize - minSize < minSize
-        ? 0
-        : minSize < 0
-        ? maxSize
-        : minSize;
+    const pivot = maxSize - minSize > maxSize || maxSize - minSize < minSize ? 0 : minSize < 0 ? maxSize : minSize;
 
     return Fuzz.from(rand.integerWithin(minSize, maxSize), sh.atLeastInteger(pivot));
   }
@@ -504,12 +480,7 @@ export class FuzzApi {
    * @param maxSize The maximum value
    */
   floatWithin(minSize: number, maxSize: number): Fuzz<number, number> {
-    const pivot =
-      maxSize - minSize > maxSize || maxSize - minSize < minSize
-        ? 0
-        : minSize < 0
-        ? maxSize
-        : minSize;
+    const pivot = maxSize - minSize > maxSize || maxSize - minSize < minSize ? 0 : minSize < 0 ? maxSize : minSize;
 
     return Fuzz.from(rand.floatWithin(minSize, maxSize), sh.atLeastFloat(pivot));
   }
@@ -699,9 +670,7 @@ export class FuzzApi {
   ): Fuzz<[A, C, E, G, I, K], B & D & F & H & J & L>;
   spread<T>(arr: Fuzz<any, T>[]): Fuzz<any, T>;
   spread(arr: Fuzz<any, any>[]): Fuzz<any, any> {
-    return this.tuple(arr).map((values) =>
-      values.reduce((acc, value) => Object.assign(acc, value), {})
-    );
+    return this.tuple(arr).map((values) => values.reduce((acc, value) => Object.assign(acc, value), {}));
   }
 
   /**

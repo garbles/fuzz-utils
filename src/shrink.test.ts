@@ -108,9 +108,7 @@ it("can avoid shrinking", () => {
 });
 
 it("with still shrink other values", () => {
-  const result = shrink
-    .tuple([shrink.string(), shrink.integer().noShrink()])
-    .value(["hello!", 123]);
+  const result = shrink.tuple([shrink.string(), shrink.integer().noShrink()]).value(["hello!", 123]);
 
   result.forEach((r) => {
     expect(r[0]).not.toEqual("hello!");
@@ -138,9 +136,7 @@ it("shrinks empty arrays", () => {
 });
 
 it("shrinks objects with base values for keys", () => {
-  const result = shrink
-    .object({ age: shrink.integer(), name: shrink.string() })
-    .value({ age: 0, name: "" });
+  const result = shrink.object({ age: shrink.integer(), name: shrink.string() }).value({ age: 0, name: "" });
 
   expect(result).toEqual([]);
 });
@@ -216,9 +212,7 @@ it("removes empty values", () => {
 
   expect(array.value([1, 2, 3, 4, 5]).some((arr) => arr.length === 0)).toBe(true);
   expect(nonEmptyArray.value([1, 2, 3, 4, 5]).some((arr) => arr.length === 0)).toBe(false);
-  expect(arrayofNonEmptyIntegers.value([1, 2, 3, 4, 5]).every((arr) => arr.indexOf(0) === -1)).toBe(
-    true
-  );
+  expect(arrayofNonEmptyIntegers.value([1, 2, 3, 4, 5]).every((arr) => arr.indexOf(0) === -1)).toBe(true);
   expect(nonEmptyArray.value([])).toEqual([]);
 });
 

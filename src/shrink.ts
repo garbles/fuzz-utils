@@ -322,9 +322,7 @@ export class ShrinkApi {
   tuple<U, V>(arr: [Shrink<U>, Shrink<V>]): Shrink<[U, V]>;
   tuple<U, V, W>(arr: [Shrink<U, U>, Shrink<V, V>, Shrink<W, W>]): Shrink<[U, V, W]>;
   tuple<U, V, W, X>(arr: [Shrink<U>, Shrink<V>, Shrink<W>, Shrink<X>]): Shrink<[U, V, W, X]>;
-  tuple<U, V, W, X, Y>(
-    arr: [Shrink<U, U>, Shrink<V>, Shrink<W>, Shrink<X>, Shrink<Y>]
-  ): Shrink<[U, V, W, X, Y]>;
+  tuple<U, V, W, X, Y>(arr: [Shrink<U, U>, Shrink<V>, Shrink<W>, Shrink<X>, Shrink<Y>]): Shrink<[U, V, W, X, Y]>;
   tuple<U, V, W, X, Y, Z>(
     arr: [Shrink<U>, Shrink<V>, Shrink<W>, Shrink<X>, Shrink<Y>, Shrink<Z>]
   ): Shrink<[U, V, W, X, Y, Z]>;

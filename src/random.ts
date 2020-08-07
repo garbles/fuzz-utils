@@ -272,12 +272,7 @@ export class Random<T> {
 
   composeMap<U, V>(u: Random<U>, fn: (t: T, u: U) => V): Random<V>;
   composeMap<U, V, W>(u: Random<U>, v: Random<V>, fn: (t: T, u: U, v: V) => W): Random<W>;
-  composeMap<U, V, W, X>(
-    u: Random<U>,
-    v: Random<V>,
-    w: Random<W>,
-    fn: (t: T, u: U, v: V, w: W) => X
-  ): Random<X>;
+  composeMap<U, V, W, X>(u: Random<U>, v: Random<V>, w: Random<W>, fn: (t: T, u: U, v: V, w: W) => X): Random<X>;
   composeMap<U, V, W, X, Y>(
     u: Random<U>,
     v: Random<V>,
@@ -440,21 +435,12 @@ export class RandomApi {
   tuple<U>(sample: [U | Random<U>]): Random<[U]>;
   tuple<U, V>(sample: [U | Random<U>, V | Random<V>]): Random<[U, V]>;
   tuple<U, V, W>(sample: [U | Random<U>, V | Random<V>, W | Random<W>]): Random<[U, V, W]>;
-  tuple<U, V, W, X>(
-    sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>]
-  ): Random<[U, V, W, X]>;
+  tuple<U, V, W, X>(sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>]): Random<[U, V, W, X]>;
   tuple<U, V, W, X, Y>(
     sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>, Y | Random<Y>]
   ): Random<[U, V, W, X, Y]>;
   tuple<U, V, W, X, Y, Z>(
-    sample: [
-      U | Random<U>,
-      V | Random<V>,
-      W | Random<W>,
-      X | Random<X>,
-      Y | Random<Y>,
-      Z | Random<Z>
-    ]
+    sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>, Y | Random<Y>, Z | Random<Z>]
   ): Random<[U, V, W, X, Y, Z]>;
   tuple<U>(sample: (U | Random<U>)[]): Random<U[]>;
   tuple(sample: (any | Random<any>)[]): Random<any[]> {

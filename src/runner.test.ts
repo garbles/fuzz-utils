@@ -1,14 +1,18 @@
 import fuzz from "./fuzz";
 import { Runner } from "./runner";
 
-it("runs tests", async () => {
-  const fuzzer = fuzz.string();
-  const runner = new Runner(fuzzer);
+const string = fuzz.string();
+const object = fuzz.object({
+  age: fuzz.posInteger(),
+});
+const runner = Runner.from([string, object]);
 
+it("runs tests", async () => {
   // this will always fail because it will quickly run into a short string
   const result = await runner.run(
-    (value) => {
-      expect(value.length).toBeGreaterThan(5);
+    (value, obj) => {
+      expect("age" in obj).toBeTruthy();
+      expect(value.length).toBeGreaterThanOrEqual(5);
     },
     { count: 50 }
   );
@@ -20,3 +24,5 @@ it("runs tests", async () => {
   const failure = result.failure[0];
   expect(failure.data.args.length).toBeLessThan(5);
 });
+
+it("can be used as a runner", () => runner.run((value) => expect(value.length).toBeGreaterThanOrEqual(5)));

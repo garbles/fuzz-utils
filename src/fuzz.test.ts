@@ -333,10 +333,7 @@ test("shrinks arrays of things", () => {
 });
 
 test("shrinks tuples", () => {
-  const [rose] = fuzz
-    .tuple([fuzz.integer(), fuzz.string()])
-    .toRandomRoseTree()
-    .sample({ maxSize: 10 });
+  const [rose] = fuzz.tuple([fuzz.integer(), fuzz.string()]).toRandomRoseTree().sample({ maxSize: 10 });
   const { value, children, secondChild, childrenOfChildren } = extract(rose);
 
   children.forEach((child) => {
@@ -439,9 +436,7 @@ test("maps values", () => {
   const pre = fuzz.integer();
   const post = pre.map((x) => Math.abs(x));
 
-  const { value: preValue, children: preChildren } = extract(
-    pre.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]
-  );
+  const { value: preValue, children: preChildren } = extract(pre.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]);
   const { value: postValue, children: postChildren } = extract(
     post.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]
   );
@@ -489,11 +484,7 @@ test("does not include empty values", () => {
 });
 
 test("generates maybe values", () => {
-  const roses = fuzz
-    .integer()
-    .maybe(6)
-    .toRandomRoseTree()
-    .toGenerator({ seed: Date.now(), maxSize: 10, count: 1e3 });
+  const roses = fuzz.integer().maybe(6).toRandomRoseTree().toGenerator({ seed: Date.now(), maxSize: 10, count: 1e3 });
   const expected = 1e3 / 6;
 
   const results = [...roses].map(extract);

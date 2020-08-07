@@ -335,11 +335,7 @@ test("can turn off memoziation", () => {
 });
 
 test("creates a tuple from other generators", () => {
-  const tuple = rand.tuple([
-    rand.integer(),
-    rand.string(),
-    rand.object({ hello: "world", thing: rand.boolean() }),
-  ]);
+  const tuple = rand.tuple([rand.integer(), rand.string(), rand.object({ hello: "world", thing: rand.boolean() })]);
 
   const [a] = tuple.sample({ seed: 1e2 });
 
@@ -516,11 +512,5 @@ test("compose maps two generators together", () => {
   expect(resultD).toEqual(["undefined", "boolean", "string", "number", "object"]);
 
   // assert that they don't reuse the same seed
-  expect(resultE).toEqual([
-    undefined,
-    -35.012848220723484,
-    85.60161273779835,
-    -74.6010240346336,
-    73.09555152182492,
-  ]);
+  expect(resultE).toEqual([undefined, -35.012848220723484, 85.60161273779835, -74.6010240346336, 73.09555152182492]);
 });
