@@ -20,8 +20,3 @@ export class Report<T> {
     return this.list[0];
   }
 }
-
-type Run<T> = {
-  args: T;
-  exec(): any;
-};
