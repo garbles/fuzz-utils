@@ -20,7 +20,7 @@ it("runs tests", async () => {
   const failure = result.getSmallestFailure();
 
   if (failure) {
-    expect(failure.args.length).toBeLessThan(5);
+    expect(failure.args[0]).toHaveLength(0); // smallest failure is always going to be the empty string
   } else {
     expect(false).toBeTruthy(); // guard
   }
