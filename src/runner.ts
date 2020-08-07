@@ -1,5 +1,6 @@
 import fuzz, { Fuzz, RoseTree } from "./fuzz";
 import { ToGeneratorOptions } from "./random";
+import { Report } from "./report";
 
 type CompleteEvent = {
   type: "complete";
@@ -17,25 +18,6 @@ type FailureEvent<T> = {
 };
 
 type RunnerEvent<T> = FailureEvent<T> | CompleteEvent;
-
-class Report<T> {
-  private _failure: FailureData<T>[] = [];
-  private _isSuccess = true;
-
-  addFailure(data: FailureData<T>) {
-    this._failure.push(data);
-    this._isSuccess = false;
-  }
-
-  get isSuccess() {
-    return this._isSuccess;
-  }
-
-  getSmallestFailure(): FailureData<T> | void {
-    const [failure] = this._failure.slice(-1);
-    return failure;
-  }
-}
 
 type Run<T> = {
   args: T;

@@ -17,7 +17,7 @@ it("runs tests", async () => {
     { count: 50 }
   );
 
-  const failure = result.getSmallestFailure();
+  const failure = result.smallestFailure;
 
   if (failure) {
     expect(failure.args[0]).toHaveLength(0); // smallest failure is always going to be the empty string
