@@ -5,6 +5,12 @@
   "license": "MPL-2.0",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "src",
+    "LICENSE.md",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf build",

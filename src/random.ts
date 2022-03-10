@@ -13,8 +13,8 @@ type SampleOptions = {
 
 export type ToGeneratorOptions = SampleOptions & { count: number };
 
-type RejectToken = { "__@FUZZ_UTILS/RANDOM__REJECT_TOKEN__": true };
-const REJECT: RejectToken = { "__@FUZZ_UTILS/RANDOM__REJECT_TOKEN__": true };
+const REJECT = Symbol();
+type RejectToken = typeof REJECT;
 
 const empty = (obj: any) => !!obj === false || obj.length === 0;
 
@@ -127,9 +127,11 @@ const array = <T>(min: number, gen: RandomGenerator<T>): RandomGenerator<T[]> =>
   };
 };
 
-const constant = <T>(value: T): RandomGenerator<T> => (size, seed) => {
-  return [value, seed];
-};
+const constant =
+  <T>(value: T): RandomGenerator<T> =>
+  (size, seed) => {
+    return [value, seed];
+  };
 
 const frequency = <T>(contexts: [number, RandomGenerator<T>][]): RandomGenerator<T> => {
   const arr: RandomGenerator<T>[] = [];

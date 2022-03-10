@@ -402,7 +402,7 @@ export class FuzzApi {
   }
 
   from<T>(value: T | Fuzz<any, T>): Fuzz<any, T> {
-    if (value instanceof Fuzz) {
+    if (Fuzz.is(value)) {
       return value;
     }
 

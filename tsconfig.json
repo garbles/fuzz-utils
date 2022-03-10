@@ -3,7 +3,7 @@
     "target": "es2015",
     "module": "commonjs",
     "outDir": "build",
-    "lib": ["es2018"],
+    "lib": ["es2020"],
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
