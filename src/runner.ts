@@ -8,7 +8,7 @@ type CompleteEvent = {
 
 type FailureData<T> = {
   args: T;
-  error: Error;
+  error: any;
   depth: number;
 };
 
