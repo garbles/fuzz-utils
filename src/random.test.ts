@@ -21,21 +21,6 @@ test("same result if the filter does not change the outcome", () => {
   expect(a).toEqual(b);
 });
 
-test("filters and maps results until it does not return rand.FILTER_MAP_REJECT", () => {
-  const [result] = rand
-    .integer()
-    .filterMap((v, REJECT) => {
-      if (v <= 90) {
-        return REJECT;
-      }
-
-      return v;
-    })
-    .sample();
-
-  expect(result).toBeGreaterThan(90);
-});
-
 test("different result if an appropriate result is used", () => {
   const result = rand.integer();
 

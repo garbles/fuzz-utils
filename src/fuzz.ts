@@ -1,15 +1,11 @@
 import rand, { Random, Seed } from "./random";
 import sh, { Shrink } from "./shrink";
-import { Runner } from "./runner";
-
-export type Filter = { __FILTER__: true };
 
 export type RandomGenerator<T, U> = (size: number, seed: Seed) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
 
-const FILTER: Filter = { __FILTER__: true };
-
-const isObject = (obj: any): obj is object => Object.prototype.toString.call(obj) === "[object Object]";
-const isFilter = (obj: any): obj is Filter => isObject(obj) && "__FILTER__" in obj;
+const FILTER = Symbol();
+type Filter = typeof FILTER;
+const isFilter = (obj: any): obj is Filter => obj === FILTER;
 
 const biasedRandomNumber = (isPositive: boolean, isNegative: boolean, isInteger: boolean): Random<number> => {
   const posNumber = isInteger ? rand.posInteger().noEmpty() : rand.posFloat().noEmpty();
@@ -328,17 +324,8 @@ export class Fuzz<T, U> {
     return new Fuzz((size, seed) => {
       const [random, , seed2, filterMap] = this.generator(size, seed);
 
-      const nextRandom = random.filterMap<U>((t: T, REJECT) => {
-        const result = filterMap.apply(t);
-
-        if (isFilter(result)) {
-          return REJECT;
-        }
-
-        return result;
-      });
-
-      const [value, seed3] = nextRandom.sample({ seed: seed2, maxSize: size });
+      const nextRand = random.map((t) => filterMap.apply(t) as U).filter((u) => !isFilter(u));
+      const [value, seed3] = nextRand.sample({ seed: seed2, maxSize: size });
 
       return fn(value).generator(size, seed3);
     });
@@ -374,15 +361,8 @@ export class Fuzz<T, U> {
       const [random, shrink, seed2, filterMap] = this.generator(size, seed);
 
       const [pair, seed3] = random
-        .filterMap<[T, U]>((t: T, REJECT) => {
-          const next = filterMap.apply(t);
-
-          if (isFilter(next)) {
-            return REJECT;
-          }
-
-          return [t, next];
-        })
+        .map((t) => [t, filterMap.apply(t)] as [T, U])
+        .filter(([t, u]) => !isFilter(u))
         .sample({ seed: seed2, maxSize: size });
 
       const rose = new RoseTree(pair, shrink, filterMap);

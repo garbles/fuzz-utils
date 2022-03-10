@@ -13,9 +13,6 @@ type SampleOptions = {
 
 export type ToGeneratorOptions = SampleOptions & { count: number };
 
-const REJECT = Symbol();
-type RejectToken = typeof REJECT;
-
 const empty = (obj: any) => !!obj === false || obj.length === 0;
 
 const isSeed = (obj: any): obj is Seed =>
@@ -189,10 +186,6 @@ export class Random<T> {
       [value, seed] = this.generator(size, seed);
       return [fn(value), seed];
     });
-  }
-
-  filterMap<U>(fn: (t: T, r: RejectToken) => U | RejectToken): Random<U> {
-    return this.map((v) => fn(v, REJECT)).filter((v) => v !== REJECT) as Random<U>;
   }
 
   bind<U>(fn: (t: T) => Random<U>): Random<U> {
