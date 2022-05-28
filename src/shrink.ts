@@ -40,55 +40,57 @@ const floatSeries: NumberSeriesFunction = function* (low, high) {
   yield* floatSeries(next, high);
 };
 
-const numberHelper = (makeSeries: NumberSeriesFunction) => (pivot: number): Generator<number> =>
-  function* (num) {
-    if (pivot === 0 && num === 0) {
-      return;
-    }
-
-    // go toward pivot from negative but end at zero
-    if (pivot >= 0 && num < 0) {
-      for (let m of makeSeries(0, -num)) {
-        yield -1 * m;
-      }
-      return;
-    }
-
-    // go toward pivot from positive but end at zero
-    if (pivot < 0 && num >= 0) {
-      yield* makeSeries(0, num);
-      return;
-    }
-
-    // both pivot and n are positive, so n goes toward n
-    if (pivot >= 0 && num >= 0) {
-      if (num > pivot) {
-        // pivot is less than n, so just start with pivot and go to n
-        yield* makeSeries(pivot, num);
+const numberHelper =
+  (makeSeries: NumberSeriesFunction) =>
+  (pivot: number): Generator<number> =>
+    function* (num) {
+      if (pivot === 0 && num === 0) {
         return;
-      } else {
-        // pivot is greater than n, make them both negative so that
-        // negative pivot is less than negative n (so that we start with
-        // the pivot). make series, then map all by -1.
-        for (let m of makeSeries(-pivot, -num)) {
+      }
+
+      // go toward pivot from negative but end at zero
+      if (pivot >= 0 && num < 0) {
+        for (let m of makeSeries(0, -num)) {
           yield -1 * m;
         }
         return;
       }
-    }
 
-    if (pivot < 0 && num < 0) {
-      if (num > pivot) {
-        yield* makeSeries(pivot, num);
-        return;
-      } else {
-        for (let m of makeSeries(-pivot, -num)) {
-          yield -1 * m;
-        }
+      // go toward pivot from positive but end at zero
+      if (pivot < 0 && num >= 0) {
+        yield* makeSeries(0, num);
         return;
       }
-    }
-  };
+
+      // both pivot and n are positive, so n goes toward n
+      if (pivot >= 0 && num >= 0) {
+        if (num > pivot) {
+          // pivot is less than n, so just start with pivot and go to n
+          yield* makeSeries(pivot, num);
+          return;
+        } else {
+          // pivot is greater than n, make them both negative so that
+          // negative pivot is less than negative n (so that we start with
+          // the pivot). make series, then map all by -1.
+          for (let m of makeSeries(-pivot, -num)) {
+            yield -1 * m;
+          }
+          return;
+        }
+      }
+
+      if (pivot < 0 && num < 0) {
+        if (num > pivot) {
+          yield* makeSeries(pivot, num);
+          return;
+        } else {
+          for (let m of makeSeries(-pivot, -num)) {
+            yield -1 * m;
+          }
+          return;
+        }
+      }
+    };
 
 const integer = numberHelper(integerSeries);
 const float = numberHelper(floatSeries);
@@ -323,9 +325,7 @@ export class ShrinkApi {
   tuple<U, V, W>(arr: [Shrink<U, U>, Shrink<V, V>, Shrink<W, W>]): Shrink<[U, V, W]>;
   tuple<U, V, W, X>(arr: [Shrink<U>, Shrink<V>, Shrink<W>, Shrink<X>]): Shrink<[U, V, W, X]>;
   tuple<U, V, W, X, Y>(arr: [Shrink<U, U>, Shrink<V>, Shrink<W>, Shrink<X>, Shrink<Y>]): Shrink<[U, V, W, X, Y]>;
-  tuple<U, V, W, X, Y, Z>(
-    arr: [Shrink<U>, Shrink<V>, Shrink<W>, Shrink<X>, Shrink<Y>, Shrink<Z>]
-  ): Shrink<[U, V, W, X, Y, Z]>;
+  tuple<U, V, W, X, Y, Z>(arr: [Shrink<U>, Shrink<V>, Shrink<W>, Shrink<X>, Shrink<Y>, Shrink<Z>]): Shrink<[U, V, W, X, Y, Z]>;
   tuple<T>(arr: Shrink<T>[]): Shrink<T[]>;
   tuple(arr: Shrink<any>[]): Shrink<any> {
     return new Shrink(function* (value) {

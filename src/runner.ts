@@ -19,29 +19,31 @@ type FailureEvent<T> = {
 
 type RunnerEvent<T> = FailureEvent<T> | CompleteEvent;
 
-type Run<T> = {
+type TestRun<T> = {
   args: T;
-  exec(): any;
+  exec(): void;
 };
 
 export class Runner<T extends any[]> {
-  static from<A>(fuzzers: [Fuzz<any, A>]): Runner<[A]>;
-  static from<A, B>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>]): Runner<[A, B]>;
-  static from<A, B, C>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>]): Runner<[A, B, C]>;
-  static from<A, B, C, D>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>]): Runner<[A, B, C, D]>;
-  static from<A, B, C, D, E>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>]): Runner<[A, B, C, D, E]>; // prettier-ignore
-  static from<A, B, C, D, E, F>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>, Fuzz<any, F>]): Runner<[A, B, C, D, E, F]>; // prettier-ignore
-  static from<A, B, C, D, E, F, G>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>, Fuzz<any, F>, Fuzz<any, G>]): Runner<[A, B, C, D, E, F, G]>; // prettier-ignore
-  static from<A, B, C, D, E, F, G, H>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>, Fuzz<any, F>, Fuzz<any, G>, Fuzz<any, H>]): Runner<[A, B, C, D, E, F, G, H]>; // prettier-ignore
-  static from(fuzzers: Fuzz<any, any>[]): Runner<any> {
+  static from<A>(fuzzers: [Fuzz<any, A>], cb: (a: A) => void): Runner<[A]>;
+  static from<A, B>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>], cb: (a: A, b: B) => void): Runner<[A, B]>;
+  static from<A, B, C>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>], cb: (a: A, b: B, c: C) => void): Runner<[A, B, C]>; // prettier-ignore
+  static from<A, B, C, D>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>], cb: (a: A, b: B, c: C, d: D) => void): Runner<[A, B, C, D]>; // prettier-ignore
+  static from<A, B, C, D, E>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>], cb: (a: A, b: B, c: C, d: D, e: E) => void): Runner<[A, B, C, D, E]>; // prettier-ignore
+  static from<A, B, C, D, E, F>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>, Fuzz<any, F>], cb: (a: A, b: B, c: C, d: D, e: E, f: F) => void): Runner<[A, B, C, D, E, F]>; // prettier-ignore
+  static from<A, B, C, D, E, F, G>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>, Fuzz<any, F>, Fuzz<any, G>], cb: (a: A, b: B, c: C, d: D, e: E, f: F, g: G) => void): Runner<[A, B, C, D, E, F, G]>; // prettier-ignore
+  static from<A, B, C, D, E, F, G, H>(fuzzers: [Fuzz<any, A>, Fuzz<any, B>, Fuzz<any, C>, Fuzz<any, D>, Fuzz<any, E>, Fuzz<any, F>, Fuzz<any, G>, Fuzz<any, H>], cb: (a: A, b: B, c: C, d: D, e: E, f: F, g: G, h: H) => void): Runner<[A, B, C, D, E, F, G, H]>; // prettier-ignore
+  static from(fuzzers: Fuzz<any, any>[], cb: (...args: any[]) => void): Runner<any> {
     const fuzzer = fuzz.tuple(fuzzers);
-    return new Runner(fuzzer);
+    return new Runner(fuzzer, cb);
   }
 
-  constructor(private fuzzer: Fuzz<any, T>) {}
+  constructor(private fuzzer: Fuzz<any, T>, private cb: (...args: any[]) => void) {}
 
-  async run(cb: (...args: T) => any, options: Partial<ToGeneratorOptions> = {}): Promise<Report<T>> {
-    const toRun = (args: T): Run<T> => {
+  async run(options: Partial<ToGeneratorOptions> = {}): Promise<Report<T>> {
+    const cb = this.cb.bind(null);
+
+    const toRun = (args: T): TestRun<T> => {
       return {
         args,
         exec() {
@@ -67,17 +69,17 @@ export class Runner<T extends any[]> {
     return report;
   }
 
-  private async *toEventIterator(iter: Generator<RoseTree<any, Run<T>>>, depth = 0): AsyncGenerator<RunnerEvent<T>> {
+  private async *toEventIterator(iter: Generator<RoseTree<any, TestRun<T>>>, depth = 0): AsyncGenerator<RunnerEvent<T>> {
     for (let rose of iter) {
-      const run = rose.value();
+      const testRun = rose.value();
 
       try {
-        await run.exec();
+        await testRun.exec();
       } catch (error) {
         const failure: FailureEvent<T> = {
           type: "failure",
           data: {
-            args: run.args,
+            args: testRun.args,
             depth,
             error,
           },

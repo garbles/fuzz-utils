@@ -36,13 +36,9 @@ test("allows you to set a maximum number of tries and throw when it isn't met", 
   const a = jest.fn((x) => x > 10);
   const b = jest.fn((x) => x > 10);
 
-  expect(() => result.resize(10).filter(a).sample({ seed: 1e3 })).toThrow(
-    new Error("Could not satisfy filter in 10000 tries.")
-  );
+  expect(() => result.resize(10).filter(a).sample({ seed: 1e3 })).toThrow(new Error("Could not satisfy filter in 10000 tries."));
 
-  expect(() => result.resize(10).filter(b, 10).sample({ seed: 1e3 })).toThrow(
-    new Error("Could not satisfy filter in 10 tries.")
-  );
+  expect(() => result.resize(10).filter(b, 10).sample({ seed: 1e3 })).toThrow(new Error("Could not satisfy filter in 10 tries."));
 
   expect(a).toHaveBeenCalledTimes(1e4);
   expect(b).toHaveBeenCalledTimes(10);
@@ -255,16 +251,7 @@ test("skips n values from the same seed", () => {
 test("memoizes the result so that they are not recomputed with the same seed", () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const filterer = jest.fn((x) => x !== 0);
-  const int = rand
-    .integer()
-    .map(mapper)
-    .map(mapper)
-    .filter(filterer)
-    .map(mapper)
-    .filter(filterer)
-    .map(mapper)
-    .filter(filterer)
-    .memoize();
+  const int = rand.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer).memoize();
 
   const [a] = int.sample({ seed: 1e2 });
   const [b] = int.sample({ seed: 1e2 });
@@ -299,15 +286,7 @@ test("keeps memoization even if chained again in a new context unless a new seed
 test("can turn off memoziation", () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const filterer = jest.fn((x) => x !== 0);
-  const int = rand
-    .integer()
-    .map(mapper)
-    .map(mapper)
-    .filter(filterer)
-    .map(mapper)
-    .filter(filterer)
-    .map(mapper)
-    .filter(filterer);
+  const int = rand.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer);
 
   const a = int.sample({ seed: 1e2 });
   const b = int.sample({ seed: 1e2 });
@@ -477,13 +456,9 @@ test("compose maps two generators together", () => {
   const genA = rand.integer().composeMap(rand.boolean(), getTypeof);
   const genB = rand.integer().composeMap(rand.boolean(), rand.string(), getTypeof);
   const genC = rand.integer().composeMap(rand.boolean(), rand.string(), rand.float(), getTypeof);
-  const genD = rand
-    .return(undefined)
-    .composeMap(rand.boolean(), rand.string(), rand.float(), rand.object({}), getTypeof);
+  const genD = rand.return(undefined).composeMap(rand.boolean(), rand.string(), rand.float(), rand.object({}), getTypeof);
 
-  const genE = rand
-    .return(undefined)
-    .composeMap(rand.float(), rand.float(), rand.float(), rand.float(), (...args: any[]) => args);
+  const genE = rand.return(undefined).composeMap(rand.float(), rand.float(), rand.float(), rand.float(), (...args: any[]) => args);
 
   const [resultA] = genA.sample();
   const [resultB] = genB.sample();

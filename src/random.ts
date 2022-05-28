@@ -15,8 +15,7 @@ export type ToGeneratorOptions = SampleOptions & { count: number };
 
 const empty = (obj: any) => !!obj === false || obj.length === 0;
 
-const isSeed = (obj: any): obj is Seed =>
-  obj !== undefined && typeof obj.state === "number" && typeof obj.increment === "number";
+const isSeed = (obj: any): obj is Seed => obj !== undefined && typeof obj.state === "number" && typeof obj.increment === "number";
 
 const nextSeed = (seed: Seed): Seed => {
   const { state, increment } = seed;
@@ -268,13 +267,7 @@ export class Random<T> {
   composeMap<U, V>(u: Random<U>, fn: (t: T, u: U) => V): Random<V>;
   composeMap<U, V, W>(u: Random<U>, v: Random<V>, fn: (t: T, u: U, v: V) => W): Random<W>;
   composeMap<U, V, W, X>(u: Random<U>, v: Random<V>, w: Random<W>, fn: (t: T, u: U, v: V, w: W) => X): Random<X>;
-  composeMap<U, V, W, X, Y>(
-    u: Random<U>,
-    v: Random<V>,
-    w: Random<W>,
-    x: Random<X>,
-    fn: (t: T, u: U, v: V, w: W, x: X) => Y
-  ): Random<Y>;
+  composeMap<U, V, W, X, Y>(u: Random<U>, v: Random<V>, w: Random<W>, x: Random<X>, fn: (t: T, u: U, v: V, w: W, x: X) => Y): Random<Y>;
   composeMap(...args: any[]): Random<any> {
     return new Random((size, seed) => {
       const last = args.length - 1;
@@ -431,9 +424,7 @@ export class RandomApi {
   tuple<U, V>(sample: [U | Random<U>, V | Random<V>]): Random<[U, V]>;
   tuple<U, V, W>(sample: [U | Random<U>, V | Random<V>, W | Random<W>]): Random<[U, V, W]>;
   tuple<U, V, W, X>(sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>]): Random<[U, V, W, X]>;
-  tuple<U, V, W, X, Y>(
-    sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>, Y | Random<Y>]
-  ): Random<[U, V, W, X, Y]>;
+  tuple<U, V, W, X, Y>(sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>, Y | Random<Y>]): Random<[U, V, W, X, Y]>;
   tuple<U, V, W, X, Y, Z>(
     sample: [U | Random<U>, V | Random<V>, W | Random<W>, X | Random<X>, Y | Random<Y>, Z | Random<Z>]
   ): Random<[U, V, W, X, Y, Z]>;
@@ -459,9 +450,7 @@ export class RandomApi {
     const keys = Object.keys(obj) as (keyof T)[];
     const rands = keys.map((k) => Random.return(obj[k])) as Random<T[keyof T]>[];
 
-    return this.tuple(rands).map((values) =>
-      keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T)
-    );
+    return this.tuple(rands).map((values) => keys.reduce((acc, key, i) => Object.assign(acc, { [key]: values[i] }), {} as T));
   }
 
   lazy<T>(fn: () => Random<T>) {

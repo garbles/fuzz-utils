@@ -437,9 +437,7 @@ test("maps values", () => {
   const post = pre.map((x) => Math.abs(x));
 
   const { value: preValue, children: preChildren } = extract(pre.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]);
-  const { value: postValue, children: postChildren } = extract(
-    post.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]
-  );
+  const { value: postValue, children: postChildren } = extract(post.toRandomRoseTree().sample({ seed, maxSize: 1e4 })[0]);
 
   expect(Math.abs(preValue)).toEqual(postValue);
   expect(preChildren.map(Math.abs)).toEqual(postChildren);
@@ -495,11 +493,7 @@ test("generates maybe values", () => {
 });
 
 test("generates nullable values", () => {
-  const roses = fuzz
-    .integer()
-    .nullable(4)
-    .toRandomRoseTree()
-    .toGenerator({ seed: Date.now(), maxSize: 10, count: 1e3 });
+  const roses = fuzz.integer().nullable(4).toRandomRoseTree().toGenerator({ seed: Date.now(), maxSize: 10, count: 1e3 });
   const expected = 1e3 / 4;
 
   const results = [...roses].map(extract);

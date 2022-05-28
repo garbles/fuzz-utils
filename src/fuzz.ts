@@ -99,9 +99,7 @@ export class RoseTree<T, U> {
 class FilterMap<T, U> {
   static tuple<A, B>(arr: [FilterMap<A, B>]): FilterMap<[A], [B]>;
   static tuple<A, B, C, D>(arr: [FilterMap<A, B>, FilterMap<C, D>]): FilterMap<[A, C], [B, D]>;
-  static tuple<A, B, C, D, E, F>(
-    arr: [FilterMap<A, B>, FilterMap<C, D>, FilterMap<E, F>]
-  ): FilterMap<[A, C, E], [B, D, F]>;
+  static tuple<A, B, C, D, E, F>(arr: [FilterMap<A, B>, FilterMap<C, D>, FilterMap<E, F>]): FilterMap<[A, C, E], [B, D, F]>;
   static tuple<A, B, C, D, E, F, G, H>(
     arr: [FilterMap<A, B>, FilterMap<C, D>, FilterMap<E, F>, FilterMap<G, H>]
   ): FilterMap<[A, C, E, G], [B, D, F, H]>;
@@ -635,9 +633,7 @@ export class FuzzApi {
   spread<A, B>(arr: [Fuzz<A, B>]): Fuzz<[A], B>;
   spread<A, B, C, D>(arr: [Fuzz<A, B>, Fuzz<C, D>]): Fuzz<[A, C], B & D>;
   spread<A, B, C, D, E, F>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>]): Fuzz<[A, C, E], B & D & F>;
-  spread<A, B, C, D, E, F, G, H>(
-    arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>]
-  ): Fuzz<[A, C, E, G], B & D & F & H>;
+  spread<A, B, C, D, E, F, G, H>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>]): Fuzz<[A, C, E, G], B & D & F & H>;
   spread<A, B, C, D, E, F, G, H, I, J>(
     arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>, Fuzz<I, J>]
   ): Fuzz<[A, C, E, G, I], B & D & F & H & J>;
@@ -657,9 +653,7 @@ export class FuzzApi {
   tuple<A, B>(arr: [Fuzz<A, B>]): Fuzz<[A], [B]>;
   tuple<A, B, C, D>(arr: [Fuzz<A, B>, Fuzz<C, D>]): Fuzz<[A, C], [B, D]>;
   tuple<A, B, C, D, E, F>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>]): Fuzz<[A, C, E], [B, D, F]>;
-  tuple<A, B, C, D, E, F, G, H>(
-    arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>]
-  ): Fuzz<[A, C, E, G], [B, D, F, H]>;
+  tuple<A, B, C, D, E, F, G, H>(arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>]): Fuzz<[A, C, E, G], [B, D, F, H]>;
   tuple<A, B, C, D, E, F, G, H, I, J>(
     arr: [Fuzz<A, B>, Fuzz<C, D>, Fuzz<E, F>, Fuzz<G, H>, Fuzz<I, J>]
   ): Fuzz<[A, C, E, G, I], [B, D, F, H, J]>;
