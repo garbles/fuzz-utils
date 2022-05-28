@@ -76,7 +76,7 @@ const biasedRandomString = (): Random<string> =>
     return rand.frequency(gens).generator(size, seed);
   });
 
-export class RoseTree<T, U> {
+export class ShrinkingRoseTree<T, U> {
   constructor(private pair: [T, U], private shrink: Shrink<T, T>, private filterMap: FilterMap<T, U>) {}
 
   public value(): U {
@@ -90,7 +90,7 @@ export class RoseTree<T, U> {
       const value = this.filterMap.apply(next);
 
       if (!isFilter(value)) {
-        yield new RoseTree<T, U>([next, value], this.shrink, this.filterMap);
+        yield new ShrinkingRoseTree<T, U>([next, value], this.shrink, this.filterMap);
       }
     }
   }
@@ -352,9 +352,9 @@ export class Fuzz<T, U> {
   }
 
   /**
-   * Internal function. Turns the fuzzer into a `Random<RoseTree>`.
+   * Collapses `Fuzz` into a `Random<RoseTree>`.
    */
-  toRandomRoseTree(): Random<RoseTree<T, U>> {
+  toRandomRoseTree(): Random<ShrinkingRoseTree<T, U>> {
     return new Random((size, seed) => {
       const [random, shrink, seed2, filterMap] = this.generator(size, seed);
 
@@ -363,7 +363,7 @@ export class Fuzz<T, U> {
         .filter(([t, u]) => !isFilter(u))
         .sample({ seed: seed2, maxSize: size });
 
-      const rose = new RoseTree(pair, shrink, filterMap);
+      const rose = new ShrinkingRoseTree(pair, shrink, filterMap);
 
       return [rose, seed3];
     });

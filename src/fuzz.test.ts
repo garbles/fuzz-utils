@@ -1,4 +1,4 @@
-import fuzz, { RoseTree } from "./fuzz";
+import fuzz, { ShrinkingRoseTree } from "./fuzz";
 
 type Results<T> = {
   value: T;
@@ -11,15 +11,15 @@ type Results<T> = {
   };
 };
 
-const extract = <T>(rose: RoseTree<any, T>): Results<T> => {
-  let children: RoseTree<any, T>[] = [];
+const extract = <T>(rose: ShrinkingRoseTree<any, T>): Results<T> => {
+  let children: ShrinkingRoseTree<any, T>[] = [];
 
   for (let child of rose.children()) {
     children.push(child);
   }
 
-  let childrenOfFirstChild: RoseTree<any, T>[] = [];
-  let childrenOfSecondChild: RoseTree<any, T>[] = [];
+  let childrenOfFirstChild: ShrinkingRoseTree<any, T>[] = [];
+  let childrenOfSecondChild: ShrinkingRoseTree<any, T>[] = [];
 
   if (children[0]) {
     for (let child of children[0].children()) {

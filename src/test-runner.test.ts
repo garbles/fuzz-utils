@@ -1,5 +1,5 @@
 import fuzz from "./fuzz";
-import { Runner } from "./runner";
+import { TestRunner } from "./test-runner";
 
 const string = fuzz.string();
 const object = fuzz.object({
@@ -7,7 +7,7 @@ const object = fuzz.object({
 });
 
 it("runs tests", async () => {
-  const runner = Runner.from([string, object], (str, obj) => {
+  const runner = TestRunner.from([string, object], (str, obj) => {
     expect("age" in obj).toBeTruthy();
     expect(str.length).toBeGreaterThanOrEqual(5);
   });
@@ -25,6 +25,6 @@ it("runs tests", async () => {
 });
 
 it("can be used as a runner", () => {
-  const runner = Runner.from([string, object], (value) => expect(value.length).toBeGreaterThanOrEqual(5));
+  const runner = TestRunner.from([string, object], (value) => expect(value.length).toBeGreaterThanOrEqual(5));
   runner.run({ count: 50 });
 });
