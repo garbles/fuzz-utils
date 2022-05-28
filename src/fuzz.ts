@@ -76,21 +76,26 @@ const biasedRandomString = (): Random<string> =>
     return rand.frequency(gens).generator(size, seed);
   });
 
-export class ShrinkingRoseTree<T, U> {
-  constructor(private pair: [T, U], private shrink: Shrink<T, T>, private filterMap: FilterMap<T, U>) {}
+export type ShrinkingValue<U> = {
+  value: U;
+  shrink(): Generator<ShrinkingValue<U>>;
+};
 
-  public value(): U {
+class ShrinkingRoseTree<T, U> implements ShrinkingValue<U> {
+  constructor(private pair: [T, U], private shrinker: Shrink<T, T>, private filterMap: FilterMap<T, U>) {}
+
+  public get value(): U {
     return this.pair[1];
   }
 
-  public *children() {
-    const iterator = this.shrink.value(this.pair[0]);
+  public *shrink(): Generator<ShrinkingRoseTree<T, U>> {
+    const iterator = this.shrinker.value(this.pair[0]);
 
     for (let next of iterator) {
       const value = this.filterMap.apply(next);
 
       if (!isFilter(value)) {
-        yield new ShrinkingRoseTree<T, U>([next, value], this.shrink, this.filterMap);
+        yield new ShrinkingRoseTree<T, U>([next, value], this.shrinker, this.filterMap);
       }
     }
   }
@@ -352,9 +357,9 @@ export class Fuzz<T, U> {
   }
 
   /**
-   * Collapses `Fuzz` into a `Random<RoseTree>`.
+   * Collapses `Fuzz` into a `Random<ShrinkingValue<U>>`.
    */
-  toRandomRoseTree(): Random<ShrinkingRoseTree<T, U>> {
+  toRandomShrinkingValue(): Random<ShrinkingValue<U>> {
     return new Random((size, seed) => {
       const [random, shrink, seed2, filterMap] = this.generator(size, seed);
 

@@ -1,4 +1,4 @@
-import fuzz, { Fuzz, ShrinkingRoseTree } from "./fuzz";
+import fuzz, { Fuzz, ShrinkingValue } from "./fuzz";
 import { Property } from "./property";
 import { ToGeneratorOptions } from "./random";
 import { Report } from "./report";
@@ -26,11 +26,11 @@ type TestRun<T, Z> = {
 };
 
 async function* toEventIterator<T extends any[], Z>(
-  iter: Generator<ShrinkingRoseTree<any, TestRun<T, Z>>>,
+  iter: Generator<ShrinkingValue<TestRun<T, Z>>>,
   depth = 0
 ): AsyncGenerator<RunnerEvent<T>> {
   for (let rose of iter) {
-    const testRun = rose.value();
+    const testRun = rose.value;
 
     try {
       await testRun.exec();
@@ -46,7 +46,7 @@ async function* toEventIterator<T extends any[], Z>(
 
       yield failure;
 
-      const next = rose.children();
+      const next = rose.shrink();
       yield* toEventIterator(next, depth + 1);
       return;
     }

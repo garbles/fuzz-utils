@@ -1,4 +1,4 @@
-import { Fuzz, ShrinkingRoseTree } from "./fuzz";
+import { Fuzz, ShrinkingValue } from "./fuzz";
 import { ToGeneratorOptions } from "./random";
 
 type TestRun<T extends any[], Z> = {
@@ -9,7 +9,7 @@ type TestRun<T extends any[], Z> = {
 export class Property<T extends any[], Z> {
   constructor(private fuzzer: Fuzz<any, T>, private cb: (...args: T) => Z) {}
 
-  toGenerator(options: Partial<ToGeneratorOptions> = {}): Generator<ShrinkingRoseTree<any, TestRun<T, Z>>, any, unknown> {
+  toGenerator(options: Partial<ToGeneratorOptions> = {}): Generator<ShrinkingValue<TestRun<T, Z>>> {
     const toRun = (args: T): TestRun<T, Z> => {
       return {
         args,
@@ -17,6 +17,6 @@ export class Property<T extends any[], Z> {
       };
     };
 
-    return this.fuzzer.map(toRun).toRandomRoseTree().toGenerator(options);
+    return this.fuzzer.map(toRun).toRandomShrinkingValue().toGenerator(options);
   }
 }
