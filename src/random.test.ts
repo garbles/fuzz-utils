@@ -1,3 +1,4 @@
+import { test, expect, vi } from "vitest";
 import { random } from "./random";
 
 test("same result will always generate the same integers", () => {
@@ -33,8 +34,8 @@ test("different result if an appropriate result is used", () => {
 
 test("allows you to set a maximum number of tries and throw when it isn't met", () => {
   const result = random.integer();
-  const a = jest.fn((x) => x > 10);
-  const b = jest.fn((x) => x > 10);
+  const a = vi.fn<[number], boolean>((x) => x > 10);
+  const b = vi.fn<[number], boolean>((x) => x > 10);
 
   expect(() => result.resize(10).filter(a).sample({ seed: 1e3 })).toThrow(new Error("Could not satisfy filter in 10000 tries."));
 
@@ -249,8 +250,8 @@ test("skips n values from the same seed", () => {
 });
 
 test("memoizes the result so that they are not recomputed with the same seed", () => {
-  const mapper = jest.fn<number, [number]>((x) => x + 1);
-  const filterer = jest.fn((x) => x !== 0);
+  const mapper = vi.fn<[number], number>((x) => x + 1);
+  const filterer = vi.fn((x) => x !== 0);
   const int = random.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer).memoize();
 
   const [a] = int.sample({ seed: 1e2 });
@@ -264,7 +265,7 @@ test("memoizes the result so that they are not recomputed with the same seed", (
 });
 
 test("keeps memoization even if chained again in a new context if the same seed is used", () => {
-  const mapper = jest.fn<number, [number]>((x) => x + 1);
+  const mapper = vi.fn<[number], number>((x) => x + 1);
   const int = random.integer().map(mapper).memoize();
 
   int.sample({ seed: 1e3 });
@@ -274,7 +275,7 @@ test("keeps memoization even if chained again in a new context if the same seed 
 });
 
 test("keeps memoization even if chained again in a new context unless a new seed is used", () => {
-  const mapper = jest.fn<number, [number]>((x) => x + 1);
+  const mapper = vi.fn<[number], number>((x) => x + 1);
   const int = random.integer().map(mapper).memoize();
 
   int.sample({ seed: 1e3 });
@@ -284,8 +285,8 @@ test("keeps memoization even if chained again in a new context unless a new seed
 });
 
 test("can turn off memoziation", () => {
-  const mapper = jest.fn<number, [number]>((x) => x + 1);
-  const filterer = jest.fn((x) => x !== 0);
+  const mapper = vi.fn<[number], number>((x) => x + 1);
+  const filterer = vi.fn((x) => x !== 0);
   const int = random.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer);
 
   const a = int.sample({ seed: 1e2 });

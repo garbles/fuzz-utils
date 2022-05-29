@@ -1,6 +1,7 @@
+import { test, expect } from "vitest";
 import { shrink } from "./shrink";
 
-it("shrinks integers", () => {
+test("shrinks integers", () => {
   const num = Math.floor(1e5 * Math.random());
 
   /**
@@ -19,7 +20,7 @@ it("shrinks integers", () => {
   });
 });
 
-it("shrinks integers toward a pivot", () => {
+test("shrinks integers toward a pivot", () => {
   const result = shrink.towardInteger(-50).value(-500);
 
   result.forEach((r) => {
@@ -28,33 +29,33 @@ it("shrinks integers toward a pivot", () => {
   });
 });
 
-it("it will stop at zero if the pivot and value are on opposite sides on the number line", () => {
+test("it will stop at zero if the pivot and value are on opposite sides on the number line", () => {
   const result = shrink.towardInteger(-50).value(500);
 
   expect(result[0]).toEqual(0);
 });
 
-it("shrinks integer zero", () => {
+test("shrinks integer zero", () => {
   const result = shrink.integer().value(0);
   expect(result).toEqual([]);
 });
 
-it("shrinks float zero", () => {
+test("shrinks float zero", () => {
   const result = shrink.float().value(0);
   expect(result).toEqual([]);
 });
 
-it("shrinks the integer pivot", () => {
+test("shrinks the integer pivot", () => {
   const result = shrink.atLeastInteger(50).value(50);
   expect(result).toEqual([]);
 });
 
-it("shrinks the float pivot", () => {
+test("shrinks the float pivot", () => {
   const result = shrink.atLeastFloat(50).value(50);
   expect(result).toEqual([]);
 });
 
-it("shrinks floats", () => {
+test("shrinks floats", () => {
   const result = shrink.float().value(500);
 
   result.forEach((r) => {
@@ -63,7 +64,7 @@ it("shrinks floats", () => {
   });
 });
 
-it("shrinks booleans", () => {
+test("shrinks booleans", () => {
   const t = shrink.boolean().value(true);
   const f = shrink.boolean().value(false);
 
@@ -71,12 +72,12 @@ it("shrinks booleans", () => {
   expect(f).toEqual([]);
 });
 
-it("shrinks empty strings", () => {
+test("shrinks empty strings", () => {
   const result = shrink.string().value("");
   expect(result).toEqual([]);
 });
 
-it("maps values to other types", () => {
+test("maps values to other types", () => {
   const result = shrink
     .integer()
     .map((n) => String.fromCharCode(n) + String.fromCharCode(n))
@@ -88,7 +89,7 @@ it("maps values to other types", () => {
   });
 });
 
-it("filters values that do not meet some criteria", () => {
+test("filters values that do not meet some criteria", () => {
   const result = shrink
     .integer()
     .filter((n) => n > 300)
@@ -101,13 +102,13 @@ it("filters values that do not meet some criteria", () => {
   });
 });
 
-it("can avoid shrinking", () => {
+test("can avoid shrinking", () => {
   const result = shrink.integer().noShrink().value(120);
 
   expect(result).toEqual([]);
 });
 
-it("with still shrink other values", () => {
+test("with still shrink other values", () => {
   const result = shrink.tuple([shrink.string(), shrink.integer().noShrink()]).value(["hello!", 123]);
 
   result.forEach((r) => {
@@ -116,7 +117,7 @@ it("with still shrink other values", () => {
   });
 });
 
-it("creates arrays of shrunken values", () => {
+test("creates arrays of shrunken values", () => {
   const result = shrink.array(shrink.integer()).value([1, 2, 3, 4, 5]);
 
   result.forEach((r) => {
@@ -130,18 +131,18 @@ it("creates arrays of shrunken values", () => {
   });
 });
 
-it("shrinks empty arrays", () => {
+test("shrinks empty arrays", () => {
   const result = shrink.array(shrink.integer()).value([]);
   expect(result).toEqual([]);
 });
 
-it("shrinks objects with base values for keys", () => {
+test("shrinks objects with base values for keys", () => {
   const result = shrink.object({ age: shrink.integer(), name: shrink.string() }).value({ age: 0, name: "" });
 
   expect(result).toEqual([]);
 });
 
-it("shrinks tuples", () => {
+test("shrinks tuples", () => {
   const result = shrink.tuple([shrink.integer(), shrink.boolean()]).value([200, true]);
 
   result.forEach((r) => {
@@ -151,12 +152,12 @@ it("shrinks tuples", () => {
   });
 });
 
-it("shrinks empty tuples", () => {
+test("shrinks empty tuples", () => {
   const result = shrink.tuple([]).value([]);
   expect(result).toEqual([]);
 });
 
-it("shrinks objects", () => {
+test("shrinks objects", () => {
   const result = shrink
     .object({
       name: shrink.string(),
@@ -173,12 +174,12 @@ it("shrinks objects", () => {
   });
 });
 
-it("shrinks empty objects", () => {
+test("shrinks empty objects", () => {
   const result = shrink.object({}).value({});
   expect(result).toEqual([]);
 });
 
-it("shrinks strings", () => {
+test("shrinks strings", () => {
   const start = "hello world!";
   const result = shrink.string().value(start);
 
@@ -188,7 +189,7 @@ it("shrinks strings", () => {
   });
 });
 
-it("removes empty values", () => {
+test("removes empty values", () => {
   const string = shrink.string();
   const nonEmptyString = string.noEmpty();
   const number = shrink.integer();
@@ -216,7 +217,7 @@ it("removes empty values", () => {
   expect(nonEmptyArray.value([])).toEqual([]);
 });
 
-it("shrinks  maybe values", () => {
+test("shrinks  maybe values", () => {
   const number = shrink.integer().maybe();
 
   expect(number.value(3)).toEqual([0, 2]);
@@ -224,7 +225,7 @@ it("shrinks  maybe values", () => {
   expect(number.value(undefined)).toEqual([]);
 });
 
-it("shrinks nullable values", () => {
+test("shrinks nullable values", () => {
   const number = shrink.integer().nullable();
 
   expect(number.value(3)).toEqual([0, 2]);
@@ -232,7 +233,7 @@ it("shrinks nullable values", () => {
   expect(number.value(null)).toEqual([]);
 });
 
-it("noop shrink values", () => {
+test("noop shrink values", () => {
   const number = shrink.noop<number>().value(123);
   expect(number).toEqual([]);
 });

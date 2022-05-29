@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { fuzz } from "./fuzz";
 import { TestRunner } from "./test-runner";
 
@@ -6,7 +7,7 @@ const object = fuzz.object({
   age: fuzz.posInteger(),
 });
 
-it("runs tests", async () => {
+test("runs tests", async () => {
   const runner = TestRunner.from([string, object], (str, obj) => {
     expect("age" in obj).toBeTruthy();
     expect(str.length).toBeGreaterThanOrEqual(5);
@@ -24,7 +25,7 @@ it("runs tests", async () => {
   }
 });
 
-it("can be used as a runner", () => {
+test("can be used as a runner", () => {
   const runner = TestRunner.from([string, object], (value) => expect(value.length).toBeGreaterThanOrEqual(5));
   runner.run({ count: 50 });
 });

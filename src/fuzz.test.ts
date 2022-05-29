@@ -1,4 +1,5 @@
-import { fuzz, ShrinkingValue } from "./fuzz";
+import { test, expect, describe, vi } from "vitest";
+import { fuzz, Fuzz, ShrinkingValue } from "./fuzz";
 
 type Results<T> = {
   value: T;
@@ -635,7 +636,7 @@ describe("biases values toward extremes", () => {
 });
 
 test("lazily returns a fuzzer", () => {
-  const fn = jest.fn(() => fuzz.string());
+  const fn = vi.fn<[], Fuzz<string, string>>(() => fuzz.string());
   const fuzzer = fuzz.lazy(fn);
 
   expect(fn).toHaveBeenCalledTimes(0);
@@ -709,7 +710,7 @@ test("spreads no fuzzers together", () => {
   expect(value).toEqual({});
 });
 
-it("can map values to functions", () => {
+test("can map values to functions", () => {
   const fuzzer = fuzz.string().map((u) => () => u);
   const randRoses = fuzzer.toRandomShrinkingValue();
 
