@@ -1,4 +1,4 @@
-import fuzz, { ShrinkingValue } from "./fuzz";
+import { fuzz, ShrinkingValue } from "./fuzz";
 
 type Results<T> = {
   value: T;

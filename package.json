@@ -14,6 +14,7 @@
     "README.md"
   ],
   "scripts": {
+    "prepublishOnly": "yarn test && yarn build",
     "build": "tsup src/index.ts --format cjs,esm --dts --clean --sourcemap",
     "test": "jest"
   },
