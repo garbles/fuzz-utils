@@ -4,23 +4,24 @@
   "author": "Gabe Scholz <github@gabe.pizza>",
   "license": "MPL-2.0",
   "main": "build/index.js",
+  "module": "build/index.mjs",
   "types": "build/index.d.ts",
   "files": [
-    "build",
+    "dist",
     "src",
+    "!src/*.test.ts",
     "LICENSE.md",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf build",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --sourcemap",
     "test": "jest"
   },
   "devDependencies": {
     "@types/jest": "^27.5.1",
-    "@types/node": "^17.0.36",
     "jest": "^28.1.0",
     "ts-jest": "^28.0.3",
-    "typescript": "^4.7.2"
+    "tsup": "^6.0.1",
+    "typescript": "^4.6.4"
   }
 }

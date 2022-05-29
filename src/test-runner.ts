@@ -2,7 +2,7 @@ import { fuzz, Fuzz, ShrinkingValue } from "./fuzz";
 import { Property } from "./property";
 import { RandomToGeneratorOptions } from "./random";
 
-type FailureCase<T> = {
+export type FailureCase<T> = {
   args: T;
   error: Error;
 };

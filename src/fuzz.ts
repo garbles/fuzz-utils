@@ -3,9 +3,9 @@ import { shrink as sh, Shrink } from "./shrink";
 
 type FilterMapGenerator<T, U> = (size: number, seed: Seed) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
 
-const FILTER = Symbol();
-type Filter = typeof FILTER;
-const isFilter = (obj: any): obj is Filter => obj === FILTER;
+export const FILTERED = Symbol();
+type Filter = typeof FILTERED;
+const isFilter = (obj: any): obj is Filter => obj === FILTERED;
 
 const biasedRandomNumber = (isPositive: boolean, isNegative: boolean, isInteger: boolean): Random<number> => {
   const posNumber = isInteger ? rand.posInteger().noEmpty() : rand.posFloat().noEmpty();
@@ -88,7 +88,7 @@ class ShrinkingRoseTree<T, U> implements ShrinkingValue<U> {
     return this.pair[1];
   }
 
-  public *shrink(): Generator<ShrinkingRoseTree<T, U>> {
+  public *shrink(): Generator<ShrinkingValue<U>> {
     const iterator = this.shrinker.value(this.pair[0]);
 
     for (let next of iterator) {
@@ -101,7 +101,7 @@ class ShrinkingRoseTree<T, U> implements ShrinkingValue<U> {
   }
 }
 
-class FilterMap<T, U> {
+export class FilterMap<T, U> {
   static tuple<A, B>(arr: [FilterMap<A, B>]): FilterMap<[A], [B]>;
   static tuple<A, B, C, D>(arr: [FilterMap<A, B>, FilterMap<C, D>]): FilterMap<[A, C], [B, D]>;
   static tuple<A, B, C, D, E, F>(arr: [FilterMap<A, B>, FilterMap<C, D>, FilterMap<E, F>]): FilterMap<[A, C, E], [B, D, F]>;
@@ -127,7 +127,7 @@ class FilterMap<T, U> {
          * then the whole thing should be filtered out.
          */
         if (isFilter(result)) {
-          return FILTER;
+          return FILTERED;
         } else {
           results[i] = result;
         }
@@ -147,7 +147,7 @@ class FilterMap<T, U> {
         const result = obj[key].apply(value[key]);
 
         if (isFilter(result)) {
-          return FILTER;
+          return FILTERED;
         } else {
           results[key] = result;
         }
@@ -164,7 +164,7 @@ class FilterMap<T, U> {
       const result = this.apply(value);
 
       if (isFilter(result) || fn(result) !== true) {
-        return FILTER;
+        return FILTERED;
       } else {
         return result;
       }
@@ -250,7 +250,7 @@ export class Fuzz<T, U> {
         const w = filterMapV.apply(v);
 
         if (isFilter(u) || isFilter(w)) {
-          return FILTER;
+          return FILTERED;
         }
 
         return fn(u, w);

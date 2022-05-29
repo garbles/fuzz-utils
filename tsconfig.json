@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
-    "outDir": "build",
+    "noEmit": true,
+    "target": "esnext",
+    "module": "esnext",
     "lib": ["es2020"],
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
-    "sourceMap": true,
-    "declaration": true,
-    "downlevelIteration": true
+    "sourceMap": true
   },
   "include": ["src/*.ts"],
-  "exclude": ["src/*.test.ts"]
+  "exclude": ["node_modules", "dist"]
 }

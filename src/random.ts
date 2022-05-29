@@ -1,5 +1,5 @@
 type NextState<T> = [T, Seed];
-type RandomValueGenerator<T> = (size: number, seed: Seed) => NextState<T>;
+export type RandomValueGenerator<T> = (size: number, seed: Seed) => NextState<T>;
 
 export type Seed = {
   state: number;
