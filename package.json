@@ -1,6 +1,6 @@
 {
   "name": "fuzz-utils",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "author": "Gabe Scholz <github@gabe.pizza>",
   "license": "MPL-2.0",
   "main": "build/index.js",
@@ -16,7 +16,7 @@
   "scripts": {
     "prepublishOnly": "npm test && npm run build",
     "build": "tsup src/index.ts --format cjs,esm --dts --clean --sourcemap",
-    "test": "vitest"
+    "test": "vitest --run"
   },
   "devDependencies": {
     "tsup": "^6.0.1",
