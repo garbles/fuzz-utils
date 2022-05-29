@@ -1,5 +1,5 @@
-export { default as fuzz, Fuzz } from "./fuzz";
-export { Property } from "./property";
-export { default as random, Random } from "./random";
-export { default as shrink, Shrink } from "./shrink";
-export { TestRunner } from "./test-runner";
+export { fuzz, Fuzz } from "./fuzz";
+export { property, Property } from "./property";
+export { random, Random } from "./random";
+export { shrink, Shrink } from "./shrink";
+export { runner, TestRunner } from "./test-runner";

@@ -1,5 +1,5 @@
 import { Fuzz, ShrinkingValue } from "./fuzz";
-import { ToGeneratorOptions } from "./random";
+import { RandomToGeneratorOptions } from "./random";
 
 type TestRun<T extends any[], Z> = {
   args: T;
@@ -7,9 +7,9 @@ type TestRun<T extends any[], Z> = {
 };
 
 export class Property<T extends any[], Z> {
-  constructor(private fuzzer: Fuzz<any, T>, private cb: (...args: T) => Z) {}
+  constructor(private readonly fuzzer: Fuzz<any, T>, private readonly cb: (...args: T) => Z) {}
 
-  toGenerator(options: Partial<ToGeneratorOptions> = {}): Generator<ShrinkingValue<TestRun<T, Z>>> {
+  toGenerator(options: Partial<RandomToGeneratorOptions> = {}): Generator<ShrinkingValue<TestRun<T, Z>>> {
     const toRun = (args: T): TestRun<T, Z> => {
       return {
         args,
@@ -20,3 +20,7 @@ export class Property<T extends any[], Z> {
     return this.fuzzer.map(toRun).toRandomShrinkingValue().toGenerator(options);
   }
 }
+
+export const property = <T extends any[], Z>(fuzzer: Fuzz<any, T>, cb: (...args: T) => Z) => {
+  return new Property(fuzzer, cb);
+};

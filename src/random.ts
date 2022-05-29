@@ -1,5 +1,5 @@
 type NextState<T> = [T, Seed];
-type RandomGenerator<T> = (size: number, seed: Seed) => NextState<T>;
+type RandomValueGenerator<T> = (size: number, seed: Seed) => NextState<T>;
 
 export type Seed = {
   state: number;
@@ -11,7 +11,7 @@ type SampleOptions = {
   maxSize: number;
 };
 
-export type ToGeneratorOptions = SampleOptions & { count: number };
+export type RandomToGeneratorOptions = SampleOptions & { count: number };
 
 const empty = (obj: any) => !!obj === false || obj.length === 0;
 
@@ -97,7 +97,7 @@ const float = (min: number, max: number, seed: Seed): NextState<number> => {
   return [scaled, nextSeed(next)];
 };
 
-const boolean: RandomGenerator<boolean> = (size, seed) => {
+const boolean: RandomValueGenerator<boolean> = (size, seed) => {
   if (size === 0) {
     return [false, seed];
   }
@@ -106,7 +106,7 @@ const boolean: RandomGenerator<boolean> = (size, seed) => {
   return [num === 1, nextSeed];
 };
 
-const array = <T>(min: number, gen: RandomGenerator<T>): RandomGenerator<T[]> => {
+const array = <T>(min: number, gen: RandomValueGenerator<T>): RandomValueGenerator<T[]> => {
   return (size, seed) => {
     let i = -1;
     let xs: T[] = [];
@@ -124,13 +124,13 @@ const array = <T>(min: number, gen: RandomGenerator<T>): RandomGenerator<T[]> =>
 };
 
 const constant =
-  <T>(value: T): RandomGenerator<T> =>
+  <T>(value: T): RandomValueGenerator<T> =>
   (size, seed) => {
     return [value, seed];
   };
 
-const frequency = <T>(contexts: [number, RandomGenerator<T>][]): RandomGenerator<T> => {
-  const arr: RandomGenerator<T>[] = [];
+const frequency = <T>(contexts: [number, RandomValueGenerator<T>][]): RandomValueGenerator<T> => {
+  const arr: RandomValueGenerator<T>[] = [];
 
   for (let context of contexts) {
     let [count, generator] = context;
@@ -157,7 +157,7 @@ export class Random<T> {
     return new Random(constant(value));
   }
 
-  constructor(public readonly generator: RandomGenerator<T>) {}
+  constructor(public readonly generator: RandomValueGenerator<T>) {}
 
   filter(fn: (t: T) => boolean, maxTries = 1e4): Random<T> {
     return new Random((size, seed) => {
@@ -293,7 +293,7 @@ export class Random<T> {
     });
   }
 
-  *toGenerator(options: Partial<ToGeneratorOptions> = {}): Generator<T> {
+  *toGenerator(options: Partial<RandomToGeneratorOptions> = {}): Generator<T> {
     let { seed, maxSize, count: maxLength = Infinity } = options;
     let currentLength = 0;
 
@@ -408,7 +408,7 @@ export class RandomApi {
   }
 
   frequency<T>(contexts: [number, Random<T>][]): Random<T> {
-    const generators = contexts.map((c) => [c[0], c[1].generator] as [number, RandomGenerator<T>]);
+    const generators = contexts.map((c) => [c[0], c[1].generator] as [number, RandomValueGenerator<T>]);
     return new Random(frequency(generators));
   }
 
@@ -458,4 +458,4 @@ export class RandomApi {
   }
 }
 
-export default new RandomApi();
+export const random = new RandomApi();

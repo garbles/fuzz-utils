@@ -1,7 +1,7 @@
-import rand, { Random, Seed } from "./random";
-import sh, { Shrink } from "./shrink";
+import { random as rand, Random, Seed } from "./random";
+import { shrink as sh, Shrink } from "./shrink";
 
-export type RandomGenerator<T, U> = (size: number, seed: Seed) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
+type FilterMapGenerator<T, U> = (size: number, seed: Seed) => [Random<T>, Shrink<T>, Seed, FilterMap<T, U>];
 
 const FILTER = Symbol();
 type Filter = typeof FILTER;
@@ -217,7 +217,7 @@ export class Fuzz<T, U> {
     });
   }
 
-  constructor(public readonly generator: RandomGenerator<T, U>) {}
+  constructor(public readonly generator: FilterMapGenerator<T, U>) {}
 
   /**
    * Maps the inner value to a new value.
@@ -732,4 +732,4 @@ export class FuzzApi {
   }
 }
 
-export default new FuzzApi();
+export const fuzz = new FuzzApi();

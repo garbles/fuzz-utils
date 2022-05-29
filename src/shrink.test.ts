@@ -1,4 +1,4 @@
-import shrink from "./shrink";
+import { shrink } from "./shrink";
 
 it("shrinks integers", () => {
   const num = Math.floor(1e5 * Math.random());

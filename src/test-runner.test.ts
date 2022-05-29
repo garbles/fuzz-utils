@@ -1,4 +1,4 @@
-import fuzz from "./fuzz";
+import { fuzz } from "./fuzz";
 import { TestRunner } from "./test-runner";
 
 const string = fuzz.string();

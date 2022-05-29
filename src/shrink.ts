@@ -345,4 +345,4 @@ export class ShrinkApi {
   }
 }
 
-export default new ShrinkApi();
+export const shrink = new ShrinkApi();

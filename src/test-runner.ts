@@ -1,7 +1,11 @@
-import fuzz, { Fuzz, ShrinkingValue } from "./fuzz";
+import { fuzz, Fuzz, ShrinkingValue } from "./fuzz";
 import { Property } from "./property";
-import { ToGeneratorOptions } from "./random";
-import { Report } from "./report";
+import { RandomToGeneratorOptions } from "./random";
+
+type FailureCase<T> = {
+  args: T;
+  error: Error;
+};
 
 type CompleteEvent = {
   type: "complete";
@@ -24,6 +28,22 @@ type TestRun<T, Z> = {
   args: T;
   exec(): Z;
 };
+
+class Report<T> {
+  public failures: FailureCase<T>[] = [];
+
+  addFailure(data: FailureCase<T>) {
+    this.failures.unshift(data);
+  }
+
+  get success() {
+    return this.failures.length === 0;
+  }
+
+  get smallestFailure(): FailureCase<T> | void {
+    return this.failures[0];
+  }
+}
 
 async function* toEventIterator<T extends any[], Z>(
   iter: Generator<ShrinkingValue<TestRun<T, Z>>>,
@@ -76,7 +96,7 @@ export class TestRunner<T extends any[], Z> {
 
   constructor(private property: Property<T, Z>) {}
 
-  async run(options: Partial<ToGeneratorOptions> = {}): Promise<Report<T>> {
+  async run(options: Partial<RandomToGeneratorOptions> = {}): Promise<Report<T>> {
     const iter = this.property.toGenerator(options);
 
     const report = new Report<T>();
@@ -94,3 +114,5 @@ export class TestRunner<T extends any[], Z> {
     return report;
   }
 }
+
+export const runner = <T extends any[], Z>(property: Property<T, Z>) => new TestRunner(property);

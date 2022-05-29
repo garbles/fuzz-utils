@@ -1,7 +1,7 @@
-import rand from "./random";
+import { random } from "./random";
 
 test("same result will always generate the same integers", () => {
-  const result = rand.integer();
+  const result = random.integer();
 
   const [a] = result.sample({ seed: 1 });
   const [b] = result.sample({ seed: 1 });
@@ -10,7 +10,7 @@ test("same result will always generate the same integers", () => {
 });
 
 test("same result if the filter does not change the outcome", () => {
-  const result = rand.integer();
+  const result = random.integer();
 
   const [a] = result.resize(10).sample({ seed: 1 });
   const [b] = result
@@ -22,7 +22,7 @@ test("same result if the filter does not change the outcome", () => {
 });
 
 test("different result if an appropriate result is used", () => {
-  const result = rand.integer();
+  const result = random.integer();
 
   const [a] = result.filter((x) => x > 0).sample({ seed: 1 });
   const [b] = result.filter((x) => x === 0).sample({ seed: 1 });
@@ -32,7 +32,7 @@ test("different result if an appropriate result is used", () => {
 });
 
 test("allows you to set a maximum number of tries and throw when it isn't met", () => {
-  const result = rand.integer();
+  const result = random.integer();
   const a = jest.fn((x) => x > 10);
   const b = jest.fn((x) => x > 10);
 
@@ -45,7 +45,7 @@ test("allows you to set a maximum number of tries and throw when it isn't met", 
 });
 
 test("same result will always generate the same list of integers", () => {
-  const result = rand.array(rand.integer());
+  const result = random.array(random.integer());
 
   const [a] = result.sample({ seed: 1, maxSize: 10 });
   const [b] = result.sample({ seed: 1, maxSize: 10 });
@@ -54,9 +54,9 @@ test("same result will always generate the same list of integers", () => {
 });
 
 test("creates a list of integers where all numbers are greater than 5", () => {
-  const [value] = rand
+  const [value] = random
     .array(
-      rand
+      random
         .integer()
         .resize(10)
         .filter((x) => x > 5)
@@ -68,26 +68,26 @@ test("creates a list of integers where all numbers are greater than 5", () => {
 });
 
 test("create integers within a range", () => {
-  for (let value of rand.integerWithin(3, 7).toGenerator({ count: 50 })) {
+  for (let value of random.integerWithin(3, 7).toGenerator({ count: 50 })) {
     expect(value).toBeGreaterThanOrEqual(3);
     expect(value).toBeLessThanOrEqual(7);
   }
 });
 
 test("creates boolean values", () => {
-  const [value] = rand.array(rand.boolean()).sample({ seed: 1 });
+  const [value] = random.array(random.boolean()).sample({ seed: 1 });
   value.forEach((v) => expect(typeof v).toEqual("boolean"));
 });
 
 test("creates character values", () => {
-  const [valueA] = rand.character().sample({ seed: 1 });
+  const [valueA] = random.character().sample({ seed: 1 });
 
   expect(typeof valueA).toEqual("string");
   expect(valueA).toHaveLength(1);
 });
 
 test("creates string values", () => {
-  const [value] = rand
+  const [value] = random
     .string()
     .resize(10)
     .filter((v) => v.length === 10)
@@ -98,9 +98,9 @@ test("creates string values", () => {
 });
 
 test("can map values", () => {
-  const [value] = rand
+  const [value] = random
     .array(
-      rand
+      random
         .integer()
         .resize(10)
         .map((x) => x + 1)
@@ -114,9 +114,9 @@ test("can map values", () => {
 });
 
 test("can map and filter values", () => {
-  const [value] = rand
+  const [value] = random
     .array(
-      rand
+      random
         .integer()
         .resize(10)
         .map((x) => x + 1)
@@ -131,11 +131,11 @@ test("can map and filter values", () => {
 });
 
 test("can bind to a different generator", () => {
-  const int = rand.integer();
+  const int = random.integer();
 
   const [value] = int
     .bind((v) => {
-      return rand
+      return random
         .string()
         .resize(v)
         .filter((s) => s.length === v);
@@ -147,10 +147,10 @@ test("can bind to a different generator", () => {
 });
 
 test("does not adopt the binding of the other generator", () => {
-  const arrs = rand
+  const arrs = random
     .posInteger()
     .resize(100)
-    .bind((v) => rand.array(rand.return(v)).resize(5).noEmpty())
+    .bind((v) => random.array(random.return(v)).resize(5).noEmpty())
     .toGenerator({ count: 50 });
 
   for (let arr of arrs) {
@@ -164,15 +164,15 @@ test("does not adopt the binding of the other generator", () => {
 });
 
 test("can assign frequency to results", () => {
-  const freq = rand.frequency([
-    [1, rand.return(1)],
-    [1, rand.return(2)],
-    [1, rand.return(3)],
-    [1, rand.return(4)],
-    [10, rand.return(0)],
+  const freq = random.frequency([
+    [1, random.return(1)],
+    [1, random.return(2)],
+    [1, random.return(3)],
+    [1, random.return(4)],
+    [10, random.return(0)],
   ]);
 
-  const [arr] = rand
+  const [arr] = random
     .array(freq)
     .resize(200)
     .filter((arr) => arr.length === 200)
@@ -184,8 +184,8 @@ test("can assign frequency to results", () => {
 });
 
 test("can sample a list", () => {
-  const sample = rand.oneOf([1, 2, 3]);
-  const [result] = rand
+  const sample = random.oneOf([1, 2, 3]);
+  const [result] = random
     .array(sample)
     .resize(300)
     .filter((arr) => arr.length === 300)
@@ -204,9 +204,9 @@ test("can sample a list", () => {
 });
 
 test("can make composite objects", () => {
-  const obj = rand.object({
-    x: rand.integer(),
-    y: rand.integer(),
+  const obj = random.object({
+    x: random.integer(),
+    y: random.integer(),
   });
 
   const [a] = obj.sample({ seed: 1e2 });
@@ -219,8 +219,8 @@ test("can make composite objects", () => {
 });
 
 test("can make objects with plain values as keys", () => {
-  const obj = rand.object({
-    x: rand.integer(),
+  const obj = random.object({
+    x: random.integer(),
     y: 12,
   });
 
@@ -232,7 +232,7 @@ test("can make objects with plain values as keys", () => {
 });
 
 test("skips n values from the same seed", () => {
-  const number = rand.integer();
+  const number = random.integer();
 
   const [a] = number.sample({ seed: 1e2 });
   const [b] = number.skip(1).sample({ seed: 1e2 });
@@ -251,7 +251,7 @@ test("skips n values from the same seed", () => {
 test("memoizes the result so that they are not recomputed with the same seed", () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const filterer = jest.fn((x) => x !== 0);
-  const int = rand.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer).memoize();
+  const int = random.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer).memoize();
 
   const [a] = int.sample({ seed: 1e2 });
   const [b] = int.sample({ seed: 1e2 });
@@ -265,7 +265,7 @@ test("memoizes the result so that they are not recomputed with the same seed", (
 
 test("keeps memoization even if chained again in a new context if the same seed is used", () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
-  const int = rand.integer().map(mapper).memoize();
+  const int = random.integer().map(mapper).memoize();
 
   int.sample({ seed: 1e3 });
   int.filter((x) => x > -1e5).sample({ seed: 1e3 });
@@ -275,7 +275,7 @@ test("keeps memoization even if chained again in a new context if the same seed 
 
 test("keeps memoization even if chained again in a new context unless a new seed is used", () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
-  const int = rand.integer().map(mapper).memoize();
+  const int = random.integer().map(mapper).memoize();
 
   int.sample({ seed: 1e3 });
   int.filter((x) => x > -1e5).sample({ seed: 1e4 });
@@ -286,7 +286,7 @@ test("keeps memoization even if chained again in a new context unless a new seed
 test("can turn off memoziation", () => {
   const mapper = jest.fn<number, [number]>((x) => x + 1);
   const filterer = jest.fn((x) => x !== 0);
-  const int = rand.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer);
+  const int = random.integer().map(mapper).map(mapper).filter(filterer).map(mapper).filter(filterer).map(mapper).filter(filterer);
 
   const a = int.sample({ seed: 1e2 });
   const b = int.sample({ seed: 1e2 });
@@ -299,7 +299,7 @@ test("can turn off memoziation", () => {
 });
 
 test("creates a tuple from other generators", () => {
-  const tuple = rand.tuple([rand.integer(), rand.string(), rand.object({ hello: "world", thing: rand.boolean() })]);
+  const tuple = random.tuple([random.integer(), random.string(), random.object({ hello: "world", thing: random.boolean() })]);
 
   const [a] = tuple.sample({ seed: 1e2 });
 
@@ -310,7 +310,7 @@ test("creates a tuple from other generators", () => {
 });
 
 test("generates a list of values", () => {
-  const numbers = rand.integer().toGenerator({ seed: 1e5, count: 50 });
+  const numbers = random.integer().toGenerator({ seed: 1e5, count: 50 });
 
   for (let n of numbers) {
     expect(typeof n).toEqual("number");
@@ -318,9 +318,9 @@ test("generates a list of values", () => {
 });
 
 test("generates non empty values", () => {
-  const numbers = rand.integer().noEmpty().toGenerator({ seed: 1e5, count: 50 });
+  const numbers = random.integer().noEmpty().toGenerator({ seed: 1e5, count: 50 });
 
-  const array = rand.array(rand.integer()).noEmpty().toGenerator({ seed: 1e5, count: 50 });
+  const array = random.array(random.integer()).noEmpty().toGenerator({ seed: 1e5, count: 50 });
 
   for (let n of numbers) {
     expect(n).not.toEqual(0);
@@ -332,7 +332,7 @@ test("generates non empty values", () => {
 });
 
 test("generates nullable values", () => {
-  const numbers = rand.integer().nullable(4).toGenerator({ seed: Date.now(), count: 1000 });
+  const numbers = random.integer().nullable(4).toGenerator({ seed: Date.now(), count: 1000 });
   const expected = 1000 / 4;
 
   const nulls = [...numbers].filter((x) => x === null).length;
@@ -342,7 +342,7 @@ test("generates nullable values", () => {
 });
 
 test("generates maybe values", () => {
-  const numbers = rand.integer().maybe(5).toGenerator({ seed: Date.now(), count: 1000 });
+  const numbers = random.integer().maybe(5).toGenerator({ seed: Date.now(), count: 1000 });
   const expected = 1000 / 5;
   const undef = [...numbers].filter((x) => x === undefined).length;
 
@@ -351,7 +351,7 @@ test("generates maybe values", () => {
 });
 
 test("resizes generators", () => {
-  const strings = rand
+  const strings = random
     .posInteger()
     .resize(10)
     .map((i) => i.toString())
@@ -363,17 +363,17 @@ test("resizes generators", () => {
 });
 
 test("generates empty values when maxSize is zero", () => {
-  const [zero] = rand.integer().sample({ maxSize: 0 });
-  const [falze] = rand.boolean().sample({ maxSize: 0 });
-  const [emptyArr] = rand.array(rand.integer()).sample({ maxSize: 0 });
-  const [emptyStr] = rand.string().sample({ maxSize: 0 });
+  const [zero] = random.integer().sample({ maxSize: 0 });
+  const [falze] = random.boolean().sample({ maxSize: 0 });
+  const [emptyArr] = random.array(random.integer()).sample({ maxSize: 0 });
+  const [emptyStr] = random.string().sample({ maxSize: 0 });
 
-  const [emptyObj] = rand
+  const [emptyObj] = random
     .object({
-      a: rand.integer(),
-      b: rand.boolean(),
-      c: rand.array(rand.integer()),
-      d: rand.string(),
+      a: random.integer(),
+      b: random.boolean(),
+      c: random.array(random.integer()),
+      d: random.string(),
     })
     .sample({ maxSize: 0 });
 
@@ -385,14 +385,14 @@ test("generates empty values when maxSize is zero", () => {
 });
 
 test("generates bytes", () => {
-  const [byte] = rand.byte().sample();
+  const [byte] = random.byte().sample();
 
   expect(byte).toBeGreaterThanOrEqual(0);
   expect(byte).toBeLessThanOrEqual(255);
 });
 
 test("generates uuids", () => {
-  const [uuid] = rand.uuid().sample();
+  const [uuid] = random.uuid().sample();
 
   expect(uuid).toHaveLength(36);
   expect(uuid[8]).toEqual("-");
@@ -412,7 +412,7 @@ test("generates uuids", () => {
 
 test("generates an unbiased integer within a range", () => {
   const count = 1e3;
-  const arr = rand.integerWithin(0, 4).toGenerator({ count });
+  const arr = random.integerWithin(0, 4).toGenerator({ count });
 
   const results = [...arr].reduce(
     (acc, num) => {
@@ -434,11 +434,11 @@ test("generates an unbiased integer within a range", () => {
 });
 
 test("lazy evaluate code in a closure", () => {
-  const gen = rand.lazy(() => {
+  const gen = random.lazy(() => {
     const mutated = [];
     mutated.push(1);
 
-    return rand.return(mutated);
+    return random.return(mutated);
   });
 
   const [a] = gen.sample();
@@ -453,12 +453,14 @@ test("compose maps two generators together", () => {
     return args.map((arg) => typeof arg);
   };
 
-  const genA = rand.integer().composeMap(rand.boolean(), getTypeof);
-  const genB = rand.integer().composeMap(rand.boolean(), rand.string(), getTypeof);
-  const genC = rand.integer().composeMap(rand.boolean(), rand.string(), rand.float(), getTypeof);
-  const genD = rand.return(undefined).composeMap(rand.boolean(), rand.string(), rand.float(), rand.object({}), getTypeof);
+  const genA = random.integer().composeMap(random.boolean(), getTypeof);
+  const genB = random.integer().composeMap(random.boolean(), random.string(), getTypeof);
+  const genC = random.integer().composeMap(random.boolean(), random.string(), random.float(), getTypeof);
+  const genD = random.return(undefined).composeMap(random.boolean(), random.string(), random.float(), random.object({}), getTypeof);
 
-  const genE = rand.return(undefined).composeMap(rand.float(), rand.float(), rand.float(), rand.float(), (...args: any[]) => args);
+  const genE = random
+    .return(undefined)
+    .composeMap(random.float(), random.float(), random.float(), random.float(), (...args: any[]) => args);
 
   const [resultA] = genA.sample();
   const [resultB] = genB.sample();
